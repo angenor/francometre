@@ -40,7 +40,31 @@
 
 *GATE: Must pass before Phase 0 research. Re-check after Phase 1 design.*
 
-[Gates determined based on constitution file]
+Portes dérivées de `.specify/memory/constitution.md` v1.0.0. Renseigner chaque ligne :
+**OK**, **N/A** (avec raison), ou **Écart** (à justifier dans « Complexity Tracking »).
+
+| # | Porte | Principe | Statut |
+|---|---|---|---|
+| 1 | Aucun `border-radius` non nul, aucune `box-shadow`, aucun `gradient` | I | |
+| 2 | Composant Card unique ; toute variante déclarée dans le composant | I | |
+| 3 | Coupe à 3,5° limitée au mot-symbole et au filet de séparation | I | |
+| 4 | Chaque occurrence d'accent traçable à `docs/design/html/` ; jamais en fond (hors nav active du back-office) | III | |
+| 5 | Clair + sombre sur chaque écran ; suit l'OS ; choix persistant ; aucun flash | IV | |
+| 6 | Contraste AA vérifié **dans les deux thèmes**, accent mesuré deux fois | IV | |
+| 7 | Aucun défilement horizontal à 375 px ; conforme aux décisions de Fondations | V | |
+| 8 | Focus visible partout ; `prefers-reduced-motion` ; `aria-current` juste ; `alt` réel | VIII | |
+| 9 | Aucune URL de média en base ; accès stockage via l'interface Storage seule | VI | |
+| 10 | Schéma sans enum de base, sans JSON, sans liste scalaire, sans auto-increment | VI | |
+| 11 | HTML d'éditeur assaini côté serveur sur liste blanche avant stockage | VII | |
+| 12 | Routes d'administration refusées par défaut sans authentification | VII | |
+| 13 | Interface et contenus en français, diacritiques corrects | VIII | |
+
+**Valeurs visuelles** : `docs/design/html/tokens.md` fait foi. **Structure d'écran et
+emplacements de l'accent** : `docs/design/html/*.html` font foi. `lecture-maquettes.md` est
+un constat, jamais une source de vérité.
+
+**Écran sans maquette** : si l'accent y paraît nécessaire, consulter le porteur du projet
+avant d'écrire la ligne (principe III).
 
 ## Project Structure
 
