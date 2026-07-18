@@ -119,6 +119,10 @@ Chiffres de tableaux/rangs : `font-variant-numeric: tabular-nums`.
 
 Grille de référence : 12 colonnes, gouttière 24 px, sur contenu 1280 px.
 
+**Point de rupture du socle : 1000 px.** À 1000 px et au-delà, le rail latéral est affiché
+en permanence ; en dessous, il cède la place à une barre supérieure et à un menu en panneau.
+Valeur décidée en Fondations — voir §7.
+
 ---
 
 ## 4. Signature « coupe »
@@ -170,3 +174,26 @@ Réutilisé partout : accueil, rubrique, « à lire aussi », états d'erreur, b
 - **Padding de section réel** (40–64 px vertical) plus court que l'« écart de sections » nominal de 80 px, qui correspond en fait à l'espacement entre cadres sur les planches.
 - **Numéro de héros surdimensionné :** « 01 » de la Une à **46px/800** (desktop) / 38px (mobile), au-delà de l'échelle typographique documentée.
 - **Photos = placeholders `picsum.photos`** (`seed` stable par article) dans toute la maquette ; à remplacer par les vraies images.
+
+---
+
+## 7. Valeurs décidées en Fondations (amendement du 2026-07-18)
+
+Quatre valeurs manquaient à ce fichier alors qu'elles gouvernent tout le socle. Le principe II
+de la constitution qualifie une valeur absente d'ici de **lacune** — à combler par amendement,
+jamais à figer en dur dans un composant. Elles sont donc consignées ici.
+
+| Cote | Valeur | Origine |
+|---|---|---|
+| Point de rupture du socle | **1000 px** | Le repli du rail n'est dessiné dans aucune maquette (principe V) : il se décide une fois, en Fondations |
+| Repère de focus — couleur | **`--ink`** | Mesuré 19,80:1 en clair et 18,05:1 en sombre sur le fond de page |
+| Repère de focus — épaisseur | **2 px** | Cohérent avec l'épaisseur des états actifs de §3 |
+| Repère de focus — décalage | **2 px** | Détache le repère du bord de l'élément |
+| Transition à la bascule de thème | **aucune** | La bascule est instantanée : aucune durée, aucune interpolation |
+| Texte d'interface (bouton, « Tout voir », bascule de thème, texte secondaire de planche) | **14 px** | Employé six fois dans les maquettes (`guide-de-style.html:83,131`, `accueil.html:63,81`) sans figurer dans l'échelle de §2 |
+
+**Le repère de focus ne se trace jamais en `--line`.** Mesuré à **1,25:1** en clair et
+**1,30:1** en sombre — très en dessous du seuil de 3:1, donc pratiquement invisible. La
+cohérence visuelle avec les filets ne justifie pas un repère qu'on ne voit pas. Les maquettes
+posent `outline:none` neuf fois sans remplacement : c'est le premier défaut relevé par le
+principe VIII, et le seul terrain où la constitution prime sur elles.

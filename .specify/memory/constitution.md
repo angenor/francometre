@@ -1,6 +1,47 @@
 <!--
-RAPPORT DE SYNCHRONISATION
-==========================
+RAPPORT DE SYNCHRONISATION — v1.1.0
+===================================
+Version : 1.0.0 → 1.1.0
+Date : 2026-07-18
+Nature du changement : MINOR — portée matériellement précisée. Aucun principe
+retiré, aucun redéfini. Deux arbitrages en attente sont refermés par amendement,
+comme la Gouvernance l'exige (« les arbitrages en attente se referment par
+amendement, pas par usage tacite »).
+
+Arbitrages refermés, tranchés par le porteur du projet le 2026-07-18 et mis en
+œuvre par la feature Fondations (specs/001-fondations-socle-ui) :
+
+  3. Frontière filet ordinaire / filet coupé → règle d'en-tête, contrôle
+     mécanique. Consignée au principe I. Valide les maquettes en l'état :
+     les passages titre → grille et grille → pagination de rubrique.html
+     emploient à bon droit un filet ordinaire.
+  4. Mot-symbole → les deux ressources de public/brand/ servent partout, à
+     leur propre taille. Aucune déclinaison « bloc » n'est produite ; les 10
+     références des maquettes à wordmark-bloc-*.png sont sans objet.
+     Consignée au principe I et aux « Contraintes de conception ».
+
+Restent ouverts : les arbitrages 1 (eyebrow = rubrique ou sous-thème ?) et
+2 (la Card dans le back-office), à trancher aux échéances déjà indiquées.
+
+Principes ajoutés, supprimés ou renommés : aucun.
+
+Modèles synchronisés :
+  ✅ .specify/templates/plan-template.md — relu ; le « Constitution Check »
+     dérive des principes, que cet amendement ne modifie pas.
+  ✅ .specify/templates/spec-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/tasks-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/checklist-template.md — relu, aucun changement requis.
+
+Amendement connexe hors de ce fichier : docs/design/html/tokens.md gagne une
+section §7 consignant le point de rupture du socle (1000 px), le repère de
+focus (2 px --ink, décalage 2 px), l'absence de transition à la bascule de
+thème et la taille du texte d'interface (14 px) — quatre lacunes relevées par
+le principe II et comblées plutôt que figées en dur.
+
+---
+
+RAPPORT DE SYNCHRONISATION — v1.0.0
+===================================
 Version : gabarit non renseigné → 1.0.0
 Nature du changement : ratification initiale (MAJOR). Les huit principes et les deux
 sections de contraintes remplacent intégralement les jetons du gabarit.
@@ -69,6 +110,21 @@ absolues et ne connaissent pas d'exception locale :
   n'apparaît qu'à **deux** endroits : le mot-symbole et le filet de séparation entre deux
   sections. Une troisième occurrence est un défaut — pas de photo coupée, pas de card
   cisaillée, pas de titre tranché, pas de diagonale décorative.
+- **Frontière entre les deux filets** (amendement v1.1.0, arbitrage 3 refermé) : le
+  **filet coupé** sépare deux blocs **dont chacun porte son propre en-tête**. Partout
+  ailleurs — titre → grille, grille → pagination, sous un champ, sous une ligne de
+  tableau — c'est le **filet ordinaire** qui s'applique. Le contrôle est mécanique et ne
+  demande aucun jugement : l'en-tête est là, ou il n'y est pas. Les passages relevés sur
+  `rubrique.html` sont donc conformes en l'état.
+- **Mot-symbole** (amendement v1.1.0, arbitrage 4 refermé) : `public/brand/NOIR.png` et
+  `public/brand/BLANC.png` sont les **seules** ressources de marque du projet. Elles
+  servent partout — rail de navigation **et** pied de page —, chacune à sa propre taille.
+  **Aucune déclinaison « bloc » n'est produite** : les références des maquettes à
+  `wordmark-bloc-noir.png` et `wordmark-bloc-blanc.png` sont sans objet et ne se
+  reproduisent pas. La déclinaison affichée suit le thème, et ce basculement est **posé
+  en CSS**, jamais recalculé au montage — sans quoi il produirait le flash que le
+  principe IV interdit. Le mot-symbole est toujours enveloppé dans un lien vers
+  l'accueil, avec un texte alternatif réel.
 
 **Raison d'être** : la maquette ne porte aucun `border-radius`, aucune `box-shadow`,
 aucun `gradient`. Ce vide est le parti pris du site ; il ne se remplit pas par commodité.
@@ -219,8 +275,11 @@ clause de consultation du principe III si l'accent y paraît nécessaire.
 
 ### Arbitrages en attente
 
-Quatre points restent ouverts. Ils ne bloquent pas la ratification, mais **doivent être
-tranchés par le porteur du projet** au moment indiqué, et non par défaut au fil du code :
+Deux points restent ouverts. Ils ne bloquent aucune feature, mais **doivent être tranchés
+par le porteur du projet** au moment indiqué, et non par défaut au fil du code.
+
+*Les arbitrages 3 (frontière des filets) et 4 (mot-symbole) ont été refermés par
+l'amendement v1.1.0 ; les règles retenues sont consignées au principe I.*
 
 1. **Eyebrow = rubrique ou sous-thème ?** `tokens.md` §5 pose « eyebrow = rubrique » sans
    nuance, mais `rubrique.html` et « À lire aussi » affichent 17 eyebrows portant 11 libellés
@@ -232,16 +291,6 @@ tranchés par le porteur du projet** au moment indiqué, et non par défaut au f
    en pixels fixes et non documentés (`.slot`, `.pub`, `.thumb`), ce que le principe I
    qualifie de divergence. → **À trancher à la spécification du back-office** : variantes
    déclarées de la Card unique, ou correction des écrans.
-3. **Frontière filet ordinaire / filet coupé.** Sur `rubrique.html`, les passages
-   titre → grille et grille → pagination emploient un filet *ordinaire* alors que ce sont
-   des sections distinctes. La définition « à l'intérieur d'une section » contre « entre deux
-   sections » ne suffit pas à décider. → **À trancher en Fondations.**
-4. **Mot-symbole.** Les maquettes portent 36 références à quatre fichiers
-   `../assets/wordmark-*.png` — 26 aux deux variantes de rail (`blanc`, `noir`), 10 aux deux
-   variantes « bloc » — et `docs/design/assets/` n'existe pas. `public/brand/` ne fournit que
-   deux fichiers (`NOIR.png`, `BLANC.png`), sans variante « bloc ». → **À raccorder en
-   Fondations**, avec le lien vers l'accueil exigé par le principe VIII.
-
 ## Portes de qualité
 
 Aucune feature n'est close tant que ces contrôles ne passent pas. Ils sont vérifiés sur les
@@ -292,4 +341,4 @@ phase 0 puis réévalué après la phase 1 de chaque plan. Les portes de qualit�
 avant clôture de chaque feature. Un écart non déclaré est un défaut, au même titre qu'une
 régression.
 
-**Version**: 1.0.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-18
+**Version**: 1.1.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-18
