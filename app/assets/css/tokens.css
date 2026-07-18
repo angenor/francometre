@@ -1,0 +1,192 @@
+/* ============================================================================
+   FRANCOMÈTRE — les valeurs du système visuel.
+
+   Transcription mécanique de `docs/design/html/tokens.md`, qui fait seul foi
+   (constitution, principe II). Ce fichier est le SEUL du dépôt autorisé à
+   porter une valeur : un code couleur ou une cote écrits ailleurs sont un
+   défaut, pas un raccourci.
+
+   Les blocs `:root` en tête des fichiers de `docs/design/html/*.html` ne sont
+   pas recopiés ici — chacun redéfinit ses variables pour son propre écran, et
+   le projet n'a qu'une seule feuille de tokens.
+
+   Une valeur manquante est une LACUNE de `tokens.md` : elle se remonte pour
+   amendement du fichier, elle ne se fige pas en dur dans un composant.
+
+   Organisation :
+     1. Couleurs — thème clair, thème sombre, couleurs de service
+     2. Typographie — familles, tailles, graisses, interlignes, approches
+     3. Géométrie et espacement
+     4. Signature « coupe »
+     5. Accessibilité — repère de focus
+   ========================================================================== */
+
+/* ---------------------------------------------------------------------------
+   1. COULEURS — `tokens.md` §1
+
+   Deux jeux, sur quatre sélecteurs. Aux sélecteurs de thème (`:root` et
+   `html.dark`) s'ajoutent deux sélecteurs de PORTÉE (`.theme-clair` et
+   `.theme-sombre`) : un sous-arbre peut alors rendre le thème opposé sans
+   qu'aucune valeur soit écrite en dur — c'est ce dont le nuancier de la
+   planche de style a besoin pour montrer les deux thèmes côte à côte
+   (contracts/tokens-et-theme.md §8).
+   ------------------------------------------------------------------------- */
+
+:root,
+.theme-clair {
+  --paper: #FFFFFF;
+  --surface: #F5F5F5;
+  --ink: #0A0A0A;
+  --muted: #6F6F6F;
+  --line: #E6E6E6;
+  --accent: #1F35FF;
+
+  /* Couleurs de service — hors palette, relevées telles quelles (§1) */
+  --primaire-survol: #2A2A2A;
+  --separateur: #C8C8C8;
+  --erreur: #C81E1E;
+  --glisser-bordure: #D8D8D8;
+}
+
+html.dark,
+.theme-sombre {
+  --paper: #0B0B0C;
+  --surface: #151517;
+  --ink: #F5F5F5;
+  --muted: #9A9A9A;
+  --line: #262628;
+  --accent: #8A97FF;
+
+  --primaire-survol: #E2E2E2;
+  --separateur: #3A3A3D;
+  --erreur: #FF6B6B;
+  --glisser-bordure: #33333A;
+}
+
+/* ---------------------------------------------------------------------------
+   2 à 5 — valeurs indépendantes du thème.
+   ------------------------------------------------------------------------- */
+
+:root {
+  /* -------------------------------------------------------------------------
+     2. TYPOGRAPHIE — `tokens.md` §2
+     ---------------------------------------------------------------------- */
+
+  /* Familles — Archivo pour les titres et les eyebrows, Instrument Sans pour
+     le corps, l'interface et les métadonnées. */
+  --police-titre: 'Archivo', sans-serif;
+  --police-corps: 'Instrument Sans', sans-serif;
+
+  /* Tailles, par rôle. Les rôles à deux valeurs portent le suffixe `-mobile`. */
+  --taille-eyebrow: 11px;
+  --taille-meta: 13px;
+  --taille-label: 13px;
+  --taille-label-admin: 11px;
+  --taille-saisie: 16px;
+  --taille-saisie-admin: 15px;
+  --taille-interface: 14px;
+  --taille-corps-courant: 17px;
+  --taille-corps-article: 19px;
+  --taille-corps-article-mobile: 18px;
+  --taille-chapo: 20px;
+  --taille-chapo-mobile: 18px;
+  --taille-titre-card: 20px;
+  --taille-titre-card-grand: 32px;
+  --taille-sous-titre-h3: 22px;
+  --taille-sous-titre-h3-mobile: 20px;
+  --taille-citation: 24px;
+  --taille-citation-mobile: 22px;
+  --taille-titre-section: 28px;
+  --taille-titre-section-mobile: 22px;
+  --taille-sous-titre-h2: 30px;
+  --taille-sous-titre-h2-mobile: 26px;
+  --taille-titre-admin: 32px;
+  --taille-titre-maquette-admin: 40px;
+  --taille-titre-heros-une: 52px;
+  --taille-titre-heros-une-mobile: 32px;
+  --taille-titre-article: 56px;
+  --taille-titre-article-mobile: 36px;
+  --taille-titre-rubrique: 72px;
+  --taille-titre-rubrique-mobile: 40px;
+  --taille-titre-heros-planche: clamp(2.5rem, 4vw, 4rem);
+
+  /* Graisses */
+  --graisse-normale: 400;
+  --graisse-moyenne: 500;
+  --graisse-demi-grasse: 600;
+  --graisse-grasse: 700;
+  --graisse-extra-grasse: 800;
+
+  /* Interlignes */
+  --interligne-nul: 1;
+  --interligne-titre-heros-planche: 1.02;
+  --interligne-titre-rubrique-mobile: 1.02;
+  --interligne-titre-heros-une: 1.04;
+  --interligne-titre-article: 1.05;
+  --interligne-titre-heros-une-mobile: 1.06;
+  --interligne-sous-titre-h2: 1.15;
+  --interligne-sous-titre-h3: 1.2;
+  --interligne-titre-card: 1.25;
+  --interligne-citation: 1.3;
+  --interligne-corps-serre: 1.5;
+  --interligne-corps: 1.6;
+
+  /* Approches (letter-spacing) */
+  --approche-titre: -0.02em;
+  --approche-sous-titre: -0.01em;
+  --approche-bouton: 0.01em;
+  --approche-eyebrow: 0.1em;
+
+  /* -------------------------------------------------------------------------
+     3. GÉOMÉTRIE ET ESPACEMENT — `tokens.md` §3
+     ---------------------------------------------------------------------- */
+
+  /* Base 4 px. L'échelle 4 · 8 · 12 · 16 · 24 · 32 · 48 · 64 · 80 en découle
+     par multiplication : elle n'a pas à être énumérée. */
+  --base: 4px;
+
+  --gouttiere: 24px;
+  --gouttiere-mobile: 20px;
+  --conteneur: 1440px;
+  --contenu: 1280px;
+  --cadre-mobile: 390px;
+  --colonne-lecture-min: 720px;
+  --colonne-lecture-max: 800px;
+  --ecart-section: 80px;
+  --ecart-section-mobile: 48px;
+  --filet: 1px;
+  --filet-actif: 2px;
+  --rail: 248px;
+  --rail-admin: 240px;
+  --rail-cards-mobile: 250px;
+  --sidebar-reglages: 320px;
+
+  /* Le point de rupture du socle (1000 px) est déclaré dans `main.css`, et
+     lui seul : une requête de média ne sait pas déréférencer une variable
+     CSS, Tailwind a donc besoin de la valeur littérale. Une seule
+     déclaration, à l'endroit où elle est exploitable. */
+
+  /* -------------------------------------------------------------------------
+     4. SIGNATURE « COUPE » — `tokens.md` §4
+
+     Angle exact 3,5°, soit 4 px de dénivelé pour 64 px parcourus. Deux
+     porteurs dans tout le système, et deux seulement : le mot-symbole et le
+     filet coupé.
+     ---------------------------------------------------------------------- */
+  --coupe-parcours: 64px;
+  --coupe-denivele: 4px;
+  --coupe-angle: 3.5deg;
+
+  /* -------------------------------------------------------------------------
+     5. REPÈRE DE FOCUS — `tokens.md` §7
+
+     Tracé en `--ink`, jamais en `--line` : mesuré à 1,25:1 en clair et 1,30:1
+     en sombre, un filet serait pratiquement invisible (research.md D6).
+     ---------------------------------------------------------------------- */
+  --focus-epaisseur: 2px;
+  --focus-decalage: 2px;
+
+  /* La bascule de thème est instantanée : aucune transition. */
+  --transition-theme: 0ms;
+  --transition-survol: 150ms;
+}

@@ -1,0 +1,201 @@
+/* ============================================================================
+   FRANCOMÈTRE — raccordement de Tailwind au système visuel.
+
+   Ce fichier ne porte AUCUNE valeur : il expose à Tailwind les variables de
+   `tokens.css`, seul dépositaire des valeurs (constitution, principe II).
+
+   Tailwind v4 se configure entièrement en CSS. Il n'y a pas — et il ne doit
+   pas y avoir — de `tailwind.config.js` : ce fichier serait un retour à la v3,
+   sans aucun effet.
+   ========================================================================== */
+
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* ----------------------------------------------------------------------------
+   Variante sombre raccordée à la CLASSE, non à `prefers-color-scheme`.
+
+   Par défaut la variante `dark:` de Tailwind suit la préférence du système, ce
+   qui rendrait le choix du visiteur inopérant. La constitution fixe le
+   mécanisme : `class="dark"` sur `<html>` (research.md D4).
+   -------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ----------------------------------------------------------------------------
+   Exposition des tokens aux utilitaires.
+
+   Le mot-clé `inline` est OBLIGATOIRE et c'est subtil. Sans lui, Tailwind écrit
+   `color: var(--color-ink)` — variable résolue LÀ OÙ ELLE EST DÉFINIE, donc
+   toujours avec la valeur du thème clair, et la bascule reste sans effet sur
+   les couleurs. Avec `inline`, Tailwind écrit `color: var(--ink)`, résolu au
+   point d'usage, donc sensible à `html.dark` (research.md D2).
+   -------------------------------------------------------------------------- */
+@theme inline {
+  /* -- Couleurs ------------------------------------------------------------ */
+  --color-paper: var(--paper);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+
+  /* Couleurs de service — `tokens.md` §1, hors palette */
+  --color-primaire-survol: var(--primaire-survol);
+  --color-separateur: var(--separateur);
+  --color-erreur: var(--erreur);
+  --color-glisser-bordure: var(--glisser-bordure);
+
+  /* -- Familles ------------------------------------------------------------ */
+  --font-titre: var(--police-titre);
+  --font-corps: var(--police-corps);
+
+  /* -- Tailles ------------------------------------------------------------- */
+  --text-eyebrow: var(--taille-eyebrow);
+  --text-meta: var(--taille-meta);
+  --text-label: var(--taille-label);
+  --text-label-admin: var(--taille-label-admin);
+  --text-saisie: var(--taille-saisie);
+  --text-saisie-admin: var(--taille-saisie-admin);
+  --text-interface: var(--taille-interface);
+  --text-corps-courant: var(--taille-corps-courant);
+  --text-corps-article: var(--taille-corps-article);
+  --text-corps-article-mobile: var(--taille-corps-article-mobile);
+  --text-chapo: var(--taille-chapo);
+  --text-chapo-mobile: var(--taille-chapo-mobile);
+  --text-titre-card: var(--taille-titre-card);
+  --text-titre-card-grand: var(--taille-titre-card-grand);
+  --text-sous-titre-h3: var(--taille-sous-titre-h3);
+  --text-sous-titre-h3-mobile: var(--taille-sous-titre-h3-mobile);
+  --text-citation: var(--taille-citation);
+  --text-citation-mobile: var(--taille-citation-mobile);
+  --text-titre-section: var(--taille-titre-section);
+  --text-titre-section-mobile: var(--taille-titre-section-mobile);
+  --text-sous-titre-h2: var(--taille-sous-titre-h2);
+  --text-sous-titre-h2-mobile: var(--taille-sous-titre-h2-mobile);
+  --text-titre-admin: var(--taille-titre-admin);
+  --text-titre-maquette-admin: var(--taille-titre-maquette-admin);
+  --text-titre-heros-une: var(--taille-titre-heros-une);
+  --text-titre-heros-une-mobile: var(--taille-titre-heros-une-mobile);
+  --text-titre-article: var(--taille-titre-article);
+  --text-titre-article-mobile: var(--taille-titre-article-mobile);
+  --text-titre-rubrique: var(--taille-titre-rubrique);
+  --text-titre-rubrique-mobile: var(--taille-titre-rubrique-mobile);
+  --text-titre-heros-planche: var(--taille-titre-heros-planche);
+
+  /* -- Graisses ------------------------------------------------------------ */
+  --font-weight-normale: var(--graisse-normale);
+  --font-weight-moyenne: var(--graisse-moyenne);
+  --font-weight-demi-grasse: var(--graisse-demi-grasse);
+  --font-weight-grasse: var(--graisse-grasse);
+  --font-weight-extra-grasse: var(--graisse-extra-grasse);
+
+  /* -- Interlignes --------------------------------------------------------- */
+  --leading-nul: var(--interligne-nul);
+  --leading-titre-heros-planche: var(--interligne-titre-heros-planche);
+  --leading-titre-rubrique-mobile: var(--interligne-titre-rubrique-mobile);
+  --leading-titre-heros-une: var(--interligne-titre-heros-une);
+  --leading-titre-article: var(--interligne-titre-article);
+  --leading-titre-heros-une-mobile: var(--interligne-titre-heros-une-mobile);
+  --leading-sous-titre-h2: var(--interligne-sous-titre-h2);
+  --leading-sous-titre-h3: var(--interligne-sous-titre-h3);
+  --leading-titre-card: var(--interligne-titre-card);
+  --leading-citation: var(--interligne-citation);
+  --leading-corps-serre: var(--interligne-corps-serre);
+  --leading-corps: var(--interligne-corps);
+
+  /* -- Approches ----------------------------------------------------------- */
+  --tracking-titre: var(--approche-titre);
+  --tracking-sous-titre: var(--approche-sous-titre);
+  --tracking-bouton: var(--approche-bouton);
+  --tracking-eyebrow: var(--approche-eyebrow);
+
+  /* -- Espacement ---------------------------------------------------------- */
+  /* Base 4 px : `p-4` vaut alors 16 px, `gap-6` 24 px — l'échelle documentée
+     découle de cette base par multiplication. */
+  --spacing: var(--base);
+
+  /* -- Cotes nommées ------------------------------------------------------- */
+  --container-conteneur: var(--conteneur);
+  --container-contenu: var(--contenu);
+  --container-cadre-mobile: var(--cadre-mobile);
+  --container-colonne-lecture: var(--colonne-lecture-max);
+  --container-rail: var(--rail);
+}
+
+/* ----------------------------------------------------------------------------
+   Point de rupture du socle.
+
+   Déclaré ici, et ici seulement : une requête de média ne sait pas
+   déréférencer une variable CSS, Tailwind a donc besoin de la valeur
+   littérale. `tokens.css` renvoie à ce point. Source unique, à l'endroit où
+   elle est exploitable (`tokens.md` §7).
+   -------------------------------------------------------------------------- */
+@theme {
+  --breakpoint-socle: 1000px;
+}
+
+/* ----------------------------------------------------------------------------
+   Sobriété appliquée par l'outillage, non par la discipline.
+
+   Ces quatre familles d'utilitaires sont SUPPRIMÉES du projet : `rounded-lg`,
+   `shadow-md`, `drop-shadow-xl` n'existent plus. Les écrire produit une classe
+   inconnue, sans effet. Le principe I devient difficile à enfreindre par
+   inadvertance, plutôt que seulement surveillé (research.md D3).
+
+   Les dégradés ne relèvent d'aucun espace de noms de thème : ils ne peuvent
+   pas être supprimés ainsi et restent écrivables. Ils sont rejetés par
+   `npm run verifier`.
+   -------------------------------------------------------------------------- */
+@theme {
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+/* ----------------------------------------------------------------------------
+   Socle de base.
+   -------------------------------------------------------------------------- */
+@layer base {
+  body {
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: var(--police-corps);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Les liens n'ont pas de couleur propre : l'accent est rationné et ne se
+     pose que là où les maquettes le placent (principe III). */
+  a {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  /* -------------------------------------------------------------------------
+     Repère de focus — sur TOUT élément interactif, sans énumération.
+
+     En `--ink`, jamais en `--line` : ce dernier est mesuré à 1,25:1 en clair
+     et 1,30:1 en sombre, soit un repère qu'on ne voit pas (research.md D6).
+
+     Les maquettes posent `outline:none` neuf fois sans remplacement. Sur ce
+     terrain — et sur celui-là seul — la constitution prime sur elles
+     (principe VIII).
+     ---------------------------------------------------------------------- */
+  *:focus-visible {
+    outline: var(--focus-epaisseur) solid var(--ink);
+    outline-offset: var(--focus-decalage);
+  }
+
+  /* Toute animation se neutralise sous « mouvement réduit » (principe VIII). */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
