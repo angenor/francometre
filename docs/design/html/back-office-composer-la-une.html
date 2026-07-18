@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Francomètre — Back-office · Composer la Une</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     FRANCOMÈTRE — Back-office · Composer la Une.
+     Choisir 5 articles et les ordonner 01→05 ; 01 = héros de l'accueil.
+     Bascule : class="dark" sur <html>.
+     ============================================================ */
+  :root{
+    --paper:#FFFFFF; --surface:#F5F5F5; --ink:#0A0A0A;
+    --muted:#6F6F6F; --line:#E6E6E6; --accent:#1F35FF; --primary-hover:#2A2A2A;
+  }
+  html.dark{
+    --paper:#0B0B0C; --surface:#151517; --ink:#F5F5F5;
+    --muted:#9A9A9A; --line:#262628; --accent:#8A97FF; --primary-hover:#E2E2E2;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Instrument Sans',sans-serif;
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  img{display:block;max-width:100%;}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent);color:#FFFFFF;}
+
+  .wm-blanc{display:none;}
+  html.dark .wm-noir{display:none;}
+  html.dark .wm-blanc{display:block;}
+
+  .bo{display:flex;max-width:1440px;margin:0 auto;border:1px solid var(--line);
+      background:var(--paper);align-items:stretch;}
+
+  /* ---------- Rail (240 px) ---------- */
+  .bo-side{flex:0 0 240px;width:240px;border-right:1px solid var(--line);
+           padding:26px 0 30px;display:flex;flex-direction:column;justify-content:space-between;}
+  .bo-side__logo{height:30px;width:auto;margin:0 24px;}
+  .bo-nav{display:flex;flex-direction:column;margin-top:40px;}
+  .bo-nav a{display:block;font-weight:500;font-size:15px;color:var(--ink);text-decoration:none;
+            padding:12px 24px;border-left:3px solid transparent;}
+  .bo-nav a:hover{text-decoration:underline;text-underline-offset:3px;}
+  .bo-nav a[aria-current="page"]{font-weight:600;background:var(--surface);
+            border-left:3px solid var(--accent);padding-left:21px;}
+  .bo-logout{margin:0 24px;font-weight:500;font-size:14px;color:var(--muted);text-decoration:none;}
+
+  /* ---------- Contenu ---------- */
+  .une-main{flex:1;min-width:0;padding:36px 40px 48px;}
+  .une-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;}
+  .une-h1{margin:0;font-family:'Archivo',sans-serif;font-weight:700;font-size:32px;letter-spacing:-.02em;
+          line-height:1;color:var(--ink);}
+  .une-sub{margin-top:12px;font-size:13px;color:var(--muted);}
+  .btn-primary{flex:0 0 auto;font-family:'Archivo',sans-serif;font-weight:600;font-size:14px;letter-spacing:.01em;
+               color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:0;
+               padding:13px 22px;cursor:pointer;transition:background 150ms ease;}
+  .btn-primary:hover{background:var(--primary-hover);border-color:var(--primary-hover);}
+
+  .cols{display:grid;grid-template-columns:1.5fr 1fr;gap:40px;margin-top:36px;align-items:start;}
+  .col-head{display:flex;align-items:baseline;justify-content:space-between;
+            border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:24px;}
+  .eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;
+           text-transform:uppercase;color:var(--muted);}
+  .col-count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+
+  /* ---------- Emplacements de la Une ---------- */
+  .slots{display:flex;flex-direction:column;gap:20px;}
+  .slot{display:flex;align-items:stretch;gap:20px;}
+  .slot__rank{flex:0 0 44px;width:44px;font-family:'Archivo',sans-serif;font-weight:800;font-size:32px;
+              line-height:1;letter-spacing:-.02em;color:var(--accent);font-variant-numeric:tabular-nums;padding-top:4px;}
+  .slot__card{flex:1;min-width:0;border:1px solid var(--line);display:flex;align-items:center;gap:18px;padding:14px;}
+  .slot__vign{flex:0 0 auto;width:213px;height:120px;background:var(--surface);overflow:hidden;position:relative;}
+  .slot--hero .slot__vign{width:320px;height:180px;}
+  .slot__vign img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .slot__body{flex:1;min-width:0;}
+  .slot__rubrique{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;
+                  text-transform:uppercase;color:var(--muted);}
+  .slot__title{margin-top:8px;font-family:'Archivo',sans-serif;font-weight:600;font-size:18px;line-height:1.25;
+               letter-spacing:-.01em;color:var(--ink);
+               display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .slot--hero .slot__title{font-size:22px;}
+  .slot__grip{flex:0 0 auto;display:flex;flex-direction:column;gap:4px;cursor:grab;padding:8px 6px;}
+  .slot__grip span{width:18px;height:1px;background:var(--muted);display:block;}
+  .slot__empty{flex:1;min-width:0;border:1px dashed var(--line);display:flex;align-items:center;
+               justify-content:center;min-height:152px;}
+  .slot__empty span{font-size:14px;color:var(--muted);}
+
+  /* ---------- Colonne « Articles publiés » ---------- */
+  .search-row{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);
+              padding:9px 0;margin-bottom:6px;}
+  .search-row input{width:100%;font-size:15px;color:var(--ink);background:transparent;border:0;outline:none;padding:0;}
+  .search-row input::placeholder{color:var(--muted);opacity:1;}
+  .pub{display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .pub__thumb{flex:0 0 auto;width:64px;height:36px;background:var(--surface);overflow:hidden;position:relative;}
+  .pub__thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .pub__body{flex:1;min-width:0;}
+  .pub__title{font-weight:500;font-size:14px;line-height:1.3;color:var(--ink);
+              display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+  .pub__rubrique{margin-top:6px;font-family:'Archivo',sans-serif;font-weight:600;font-size:10px;
+                 letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+  .pub__pin{flex:0 0 auto;font-weight:500;font-size:13px;color:var(--ink);text-decoration:underline;
+            text-underline-offset:2px;white-space:nowrap;padding-top:2px;}
+</style>
+</head>
+
+<body>
+<div class="bo">
+
+  <!-- RAIL -->
+  <aside class="bo-side">
+    <div>
+      <img class="bo-side__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre">
+      <img class="bo-side__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre">
+      <nav class="bo-nav">
+        <a href="back-office-articles.html">Articles</a>
+        <a href="#" aria-current="page">À la une</a>
+        <a href="#">Médias</a>
+      </nav>
+    </div>
+    <a class="bo-logout" href="connexion.html">Déconnexion</a>
+  </aside>
+
+  <!-- CONTENU -->
+  <main class="une-main">
+    <div class="une-head">
+      <div style="min-width:0;">
+        <h1 class="une-h1">À la une</h1>
+        <div class="une-sub">L'ordre choisi ici est l'ordre affiché sur la page d'accueil.</div>
+      </div>
+      <button class="btn-primary" type="button">Enregistrer la Une</button>
+    </div>
+
+    <div class="cols">
+
+      <!-- COLONNE GAUCHE — les 5 emplacements -->
+      <div>
+        <div class="col-head">
+          <span class="eyebrow">À la une</span>
+          <span class="col-count">4 / 5 emplacements</span>
+        </div>
+        <div class="slots">
+
+          <div class="slot slot--hero">
+            <div class="slot__rank">01</div>
+            <div class="slot__card">
+              <div class="slot__vign"><img src="https://picsum.photos/seed/fm-hero-eu/480/270" alt=""></div>
+              <div class="slot__body">
+                <div class="slot__rubrique">Diplomatie</div>
+                <div class="slot__title">Alliance franco-allemande sur les batteries : douze milliards pour relocaliser la production</div>
+              </div>
+              <div class="slot__grip" title="Déplacer"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="slot">
+            <div class="slot__rank">02</div>
+            <div class="slot__card">
+              <div class="slot__vign"><img src="https://picsum.photos/seed/fm-eco-top/480/270" alt=""></div>
+              <div class="slot__body">
+                <div class="slot__rubrique">Économie</div>
+                <div class="slot__title">L'inflation repasse sous les 2 % pour la première fois depuis trois ans</div>
+              </div>
+              <div class="slot__grip" title="Déplacer"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="slot">
+            <div class="slot__rank">03</div>
+            <div class="slot__card">
+              <div class="slot__vign"><img src="https://picsum.photos/seed/fm-env-top/480/270" alt=""></div>
+              <div class="slot__body">
+                <div class="slot__rubrique">Environnement</div>
+                <div class="slot__title">Canicule précoce : seize départements placés en vigilance orange</div>
+              </div>
+              <div class="slot__grip" title="Déplacer"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="slot">
+            <div class="slot__rank">04</div>
+            <div class="slot__card">
+              <div class="slot__vign"><img src="https://picsum.photos/seed/fm-sante-top/480/270" alt=""></div>
+              <div class="slot__body">
+                <div class="slot__rubrique">Santé</div>
+                <div class="slot__title">Déserts médicaux : le plan de la Sécurité sociale divise les élus locaux</div>
+              </div>
+              <div class="slot__grip" title="Déplacer"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+
+          <div class="slot">
+            <div class="slot__rank">05</div>
+            <div class="slot__empty"><span>Emplacement libre</span></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- COLONNE DROITE — articles publiés -->
+      <div>
+        <div style="border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px;">
+          <span class="eyebrow">Articles publiés</span>
+        </div>
+        <div class="search-row">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round" style="flex:0 0 auto;"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+          <input type="text" placeholder="Rechercher un article">
+        </div>
+
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-d2/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Le Festival d'Avignon ouvre sous le signe de la jeunesse</div><div class="pub__rubrique">Culture</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-d6/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Pouvoir d'achat : la consommation des ménages repart timidement</div><div class="pub__rubrique">Économie</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-d1/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Souveraineté numérique : un cloud public européen entre en service</div><div class="pub__rubrique">Technologie</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-sport-top/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Tour de France : la première étape de montagne rebat les cartes</div><div class="pub__rubrique">Sport</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-env-lynx/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Le retour discret du lynx dans les forêts des Vosges</div><div class="pub__rubrique">Biodiversité</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-env-eolien/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Éoliennes en mer : le plus grand parc du pays raccordé au réseau</div><div class="pub__rubrique">Énergie</div></div><a class="pub__pin" href="#">Épingler</a></div>
+        <div class="pub"><div class="pub__thumb"><img src="https://picsum.photos/seed/fm-d3/480/270" alt=""></div><div class="pub__body"><div class="pub__title">Réforme du lycée : ce qui change à la rentrée pour les élèves de seconde</div><div class="pub__rubrique">Éducation</div></div><a class="pub__pin" href="#">Épingler</a></div>
+
+      </div>
+
+    </div>
+  </main>
+</div>
+</body>
+</html>

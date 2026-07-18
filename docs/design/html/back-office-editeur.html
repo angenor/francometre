@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Francomètre — Back-office · Éditeur</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     FRANCOMÈTRE — Back-office · Éditeur d'article.
+     Le corps se rend exactement comme sur le site publié.
+     Bascule : class="dark" sur <html>.
+     ============================================================ */
+  :root{
+    --paper:#FFFFFF; --surface:#F5F5F5; --ink:#0A0A0A;
+    --muted:#6F6F6F; --line:#E6E6E6; --accent:#1F35FF;
+    --primary-hover:#2A2A2A; --disabled:#9A9A9A;
+  }
+  html.dark{
+    --paper:#0B0B0C; --surface:#151517; --ink:#F5F5F5;
+    --muted:#9A9A9A; --line:#262628; --accent:#8A97FF;
+    --primary-hover:#E2E2E2; --disabled:#5A5A5D;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Instrument Sans',sans-serif;
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  img{display:block;max-width:100%;}
+  a{color:var(--accent);}
+  ::selection{background:var(--accent);color:#FFFFFF;}
+
+  .wm-blanc{display:none;}
+  html.dark .wm-noir{display:none;}
+  html.dark .wm-blanc{display:block;}
+
+  .bo{display:flex;max-width:1440px;margin:0 auto;border:1px solid var(--line);
+      background:var(--paper);align-items:stretch;}
+
+  /* ---------- Rail (240 px) ---------- */
+  .bo-side{flex:0 0 240px;width:240px;border-right:1px solid var(--line);
+           padding:26px 0 30px;display:flex;flex-direction:column;justify-content:space-between;}
+  .bo-side__logo{height:30px;width:auto;margin:0 24px;}
+  .bo-nav{display:flex;flex-direction:column;margin-top:40px;}
+  .bo-nav a{display:block;font-weight:500;font-size:15px;color:var(--ink);text-decoration:none;
+            padding:12px 24px;border-left:3px solid transparent;}
+  .bo-nav a:hover{text-decoration:underline;text-underline-offset:3px;}
+  .bo-nav a[aria-current="page"]{font-weight:600;background:var(--surface);
+            border-left:3px solid var(--accent);padding-left:21px;}
+  .bo-logout{margin:0 24px;font-weight:500;font-size:14px;color:var(--muted);text-decoration:none;}
+
+  .bo-body{flex:1;min-width:0;display:flex;align-items:stretch;}
+
+  /* ---------- Colonne éditeur ---------- */
+  .editor{flex:1;min-width:0;padding:30px 56px 64px;}
+  .editor-top{display:flex;align-items:center;justify-content:space-between;gap:24px;}
+  .editor-back{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);text-decoration:none;}
+  .editor-back:hover{text-decoration:underline;text-underline-offset:3px;}
+  .editor-save{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .editor-save .dot{width:6px;height:6px;background:var(--muted);display:inline-block;}
+
+  .editor-doc{max-width:800px;margin-top:30px;}
+  .editor-title{font-family:'Archivo',sans-serif;font-weight:800;font-size:40px;line-height:1.08;
+                letter-spacing:-.02em;color:var(--ink);text-wrap:balance;}
+  .editor-chapo{margin-top:20px;font-weight:400;font-size:20px;line-height:1.5;color:var(--muted);}
+
+  /* ---------- Barre d'outils (collante) ---------- */
+  .toolbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:1px;height:44px;
+           background:var(--paper);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+           margin-top:28px;padding:0 6px;}
+  .tb-btn{display:inline-flex;align-items:center;justify-content:center;height:32px;min-width:34px;
+          padding:0 9px;font-family:'Archivo',sans-serif;font-size:15px;line-height:1;color:var(--ink);
+          background:transparent;border:0;border-radius:0;cursor:pointer;transition:background 120ms ease,color 120ms ease;}
+  .tb-btn:hover{background:var(--surface);}
+  .tb-btn--b{font-weight:700;}
+  .tb-btn--i{font-weight:600;font-style:italic;}
+  .tb-btn--hx{font-weight:600;font-size:14px;padding:0 10px;}
+  .tb-btn--active{color:var(--accent);background:var(--surface);}   /* seul endroit où l'accent touche l'UI */
+  .tb-btn--disabled{color:var(--disabled);cursor:not-allowed;}
+  .tb-btn--disabled:hover{background:transparent;}
+  .tb-sep{width:1px;height:20px;background:var(--line);margin:0 5px;flex:0 0 auto;}
+
+  /* ---------- Zone de saisie = rendu du site publié ---------- */
+  .doc{max-width:720px;margin-top:40px;}
+  .doc p{margin:0;font-size:19px;line-height:1.6;color:var(--ink);}
+  .doc h2{margin:48px 0 14px;font-family:'Archivo',sans-serif;font-weight:700;font-size:30px;
+          line-height:1.15;letter-spacing:-.02em;color:var(--ink);}
+  .doc ul{margin:26px 0 0;padding-left:22px;font-size:19px;line-height:1.6;color:var(--ink);}
+  .doc li{margin-bottom:10px;padding-left:6px;}
+  .doc li:last-child{margin-bottom:0;}
+  .doc blockquote{margin:48px 0;border-left:2px solid var(--accent);padding-left:24px;
+                  font-family:'Archivo',sans-serif;font-weight:500;font-style:italic;font-size:24px;
+                  line-height:1.3;letter-spacing:-.01em;color:var(--ink);}
+  .doc a{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  .doc .after{margin-top:26px;}
+
+  /* ---------- Sidebar réglages (320 px) ---------- */
+  .settings{flex:0 0 320px;width:320px;border-left:1px solid var(--line);
+            padding:34px 28px 28px;display:flex;flex-direction:column;}
+  .settings__stack{display:flex;flex-direction:column;gap:30px;}
+  .set-label{display:block;font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;
+             letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:12px;}
+  .segmented{display:grid;border:1px solid var(--line);}
+  .segmented.two{grid-template-columns:1fr 1fr;}
+  .segmented.five{grid-template-columns:repeat(5,1fr);font-variant-numeric:tabular-nums;}
+  .seg{height:44px;font-family:'Instrument Sans',sans-serif;font-weight:500;font-size:14px;
+       color:var(--muted);background:transparent;border:0;border-bottom:2px solid transparent;
+       border-radius:0;cursor:pointer;}
+  .seg + .seg{border-left:1px solid var(--line);}
+  .seg--active{font-weight:600;color:var(--accent);border-bottom:2px solid var(--accent);}
+  .segmented.five .seg{height:38px;font-family:'Archivo',sans-serif;font-weight:600;font-size:13px;}
+  .set-select{position:relative;border-bottom:1px solid var(--line);}
+  .set-select select{width:100%;font-family:'Instrument Sans',sans-serif;font-size:15px;color:var(--ink);
+                     background:transparent;border:0;border-radius:0;outline:none;padding:8px 24px 8px 0;
+                     -webkit-appearance:none;appearance:none;cursor:pointer;}
+  .set-select svg{position:absolute;right:0;top:50%;transform:translateY(-50%);pointer-events:none;}
+  .set-input{width:100%;font-family:'Instrument Sans',sans-serif;font-size:15px;color:var(--ink);
+             background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;
+             padding:8px 0;outline:none;}
+  .set-check{display:flex;align-items:center;gap:10px;cursor:pointer;}
+  .set-check input{width:18px;height:18px;border-radius:0;accent-color:var(--accent);flex:0 0 auto;}
+  .set-check span{font-size:15px;color:var(--ink);}
+  .set-sub{display:block;font-size:12px;color:var(--muted);margin:16px 0 8px;}
+
+  .cover{position:relative;aspect-ratio:16/9;background:var(--surface);overflow:hidden;}
+  .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .cover__chips{position:absolute;top:8px;right:8px;display:flex;gap:6px;}
+  .chip{font-family:'Instrument Sans',sans-serif;font-weight:500;font-size:12px;color:var(--ink);
+        background:var(--paper);border:1px solid var(--line);border-radius:0;padding:5px 10px;cursor:pointer;}
+  .chip:hover{background:var(--surface);}
+  .alt-label{display:block;font-size:13px;color:var(--ink);margin-bottom:8px;}
+  .alt-input{width:100%;font-family:'Instrument Sans',sans-serif;font-size:14px;color:var(--ink);
+             background:transparent;border:0;border-bottom:1px solid var(--line);padding:8px 0;outline:none;}
+  .help{font-size:11px;line-height:1.5;color:var(--muted);margin-top:8px;}
+
+  .settings__actions{margin-top:auto;padding-top:28px;}
+  .btn-block{width:100%;height:46px;font-family:'Archivo',sans-serif;font-weight:600;font-size:14px;
+             letter-spacing:.01em;border-radius:0;cursor:pointer;transition:background 150ms ease;}
+  .btn-block--secondary{color:var(--ink);background:transparent;border:1px solid var(--ink);}
+  .btn-block--secondary:hover{background:var(--surface);}
+  .btn-block--primary{color:var(--paper);background:var(--ink);border:1px solid var(--ink);}
+  .btn-block--primary:hover{background:var(--primary-hover);}
+</style>
+</head>
+
+<body>
+<div class="bo">
+
+  <!-- RAIL -->
+  <aside class="bo-side">
+    <div>
+      <img class="bo-side__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre">
+      <img class="bo-side__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre">
+      <nav class="bo-nav">
+        <a href="back-office-articles.html" aria-current="page">Articles</a>
+        <a href="back-office-composer-la-une.html">À la une</a>
+        <a href="#">Médias</a>
+      </nav>
+    </div>
+    <a class="bo-logout" href="connexion.html">Déconnexion</a>
+  </aside>
+
+  <div class="bo-body">
+
+    <!-- ÉDITEUR -->
+    <section class="editor">
+      <div class="editor-top">
+        <a class="editor-back" href="back-office-articles.html"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>Tous les articles</a>
+        <div class="editor-save"><span class="dot"></span>Brouillon enregistré · il y a 2 min</div>
+      </div>
+
+      <div class="editor-doc">
+        <div class="editor-title" contenteditable="false">Face au retour des grands incendies, la forêt française repense sa défense</div>
+        <div class="editor-chapo" contenteditable="false">Feux plus précoces, massifs jusqu'ici épargnés, moyens inégaux : enquête sur une doctrine de lutte que le réchauffement oblige à réinventer.</div>
+
+        <!-- BARRE D'OUTILS -->
+        <div class="toolbar" role="toolbar" aria-label="Mise en forme">
+          <button class="tb-btn tb-btn--b" title="Gras">B</button>
+          <button class="tb-btn tb-btn--i" title="Italique">I</button>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button class="tb-btn tb-btn--hx tb-btn--active" title="Titre de niveau 2">H2</button>
+          <button class="tb-btn tb-btn--hx" title="Titre de niveau 3">H3</button>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button class="tb-btn" title="Liste à puces"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="9" y1="6" x2="20" y2="6"></line><line x1="9" y1="12" x2="20" y2="12"></line><line x1="9" y1="18" x2="20" y2="18"></line><circle cx="4.5" cy="6" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="12" r="1.3" fill="currentColor" stroke="none"></circle><circle cx="4.5" cy="18" r="1.3" fill="currentColor" stroke="none"></circle></svg></button>
+          <button class="tb-btn" title="Liste numérotée"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="10" y1="6" x2="20" y2="6"></line><line x1="10" y1="12" x2="20" y2="12"></line><line x1="10" y1="18" x2="20" y2="18"></line><text x="2.5" y="8.6" font-size="8" font-family="Archivo, sans-serif" font-weight="700" fill="currentColor" stroke="none">1</text><text x="2.5" y="20.2" font-size="8" font-family="Archivo, sans-serif" font-weight="700" fill="currentColor" stroke="none">2</text></svg></button>
+          <button class="tb-btn" title="Citation"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M6 7h4v4c0 2.2-1.5 3.7-3.7 4L6 17.5c1.2-.3 2-1.1 2-2.5H6V7Z"></path><path d="M14 7h4v4c0 2.2-1.5 3.7-3.7 4L14 17.5c1.2-.3 2-1.1 2-2.5h-2V7Z"></path></svg></button>
+          <button class="tb-btn" title="Lien"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a3.5 3.5 0 0 0 5 0l3-3a3.5 3.5 0 0 0-5-5l-1 1"></path><path d="M14 10a3.5 3.5 0 0 0-5 0l-3 3a3.5 3.5 0 0 0 5 5l1-1"></path></svg></button>
+          <button class="tb-btn" title="Image"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="14"></rect><path d="M3.5 16l4.5-4 3 2.5 4-4 5 5"></path><circle cx="9" cy="9.5" r="1.4"></circle></svg></button>
+          <span class="tb-sep" aria-hidden="true"></span>
+          <button class="tb-btn" title="Annuler"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h9a5 5 0 0 1 0 10H8"></path><path d="M4 8l4-4M4 8l4 4"></path></svg></button>
+          <button class="tb-btn tb-btn--disabled" title="Rétablir"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 8h-9a5 5 0 0 0 0 10h5"></path><path d="M20 8l-4-4M20 8l-4 4"></path></svg></button>
+        </div>
+
+        <!-- ZONE DE SAISIE -->
+        <div class="doc">
+          <p>Chaque été, les forêts françaises affrontent des feux plus précoces, plus vastes et plus difficiles à contenir. Après une saison 2025 record, l'État, les régions et les propriétaires forestiers tentent de réorganiser une défense pensée pour un climat qui n'existe plus.</p>
+          <h2>Une saison à haut risque</h2>
+          <p>Les prévisions pour l'été 2026 confirment la tendance : la sécheresse hivernale a fragilisé les sols, et les canicules précoces assèchent la végétation plusieurs semaines avant les pics habituels.</p>
+          <ul>
+            <li>Colonnes de pompiers mobiles renforcées dans les régions nouvellement exposées.</li>
+            <li>Cartographie annuelle des massifs à risque, mise à jour par données satellitaires.</li>
+            <li>Débroussaillement obligatoire étendu à de nouvelles communes.</li>
+          </ul>
+          <blockquote>On ne combat plus les incendies de demain avec les cartes d'hier. La forêt a changé, notre organisation doit suivre.</blockquote>
+          <p class="after">Reste la question du financement. Les crédits annoncés couvrent l'urgence, mais la prévention de long terme dépendra des arbitrages budgétaires de l'automne, selon le <a href="#">dernier rapport de l'Office national des forêts</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SIDEBAR RÉGLAGES -->
+    <aside class="settings">
+      <div class="settings__stack">
+
+        <div>
+          <span class="set-label">Statut</span>
+          <div class="segmented two">
+            <button class="seg seg--active">Brouillon</button>
+            <button class="seg">Publié</button>
+          </div>
+        </div>
+
+        <div>
+          <span class="set-label">Rubrique</span>
+          <div class="set-select">
+            <select><option>Environnement</option><option>Économie</option><option>Culture</option><option>Santé</option></select>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+          </div>
+        </div>
+
+        <div>
+          <span class="set-label">Date de publication</span>
+          <input class="set-input" type="text" value="14 juillet 2026">
+        </div>
+
+        <div>
+          <label class="set-check">
+            <input type="checkbox" checked>
+            <span>À la une</span>
+          </label>
+          <span class="set-sub">Rang dans le classement</span>
+          <div class="segmented five">
+            <button class="seg">01</button>
+            <button class="seg">02</button>
+            <button class="seg seg--active">03</button>
+            <button class="seg">04</button>
+            <button class="seg">05</button>
+          </div>
+        </div>
+
+        <div>
+          <span class="set-label">Image de couverture</span>
+          <div class="cover">
+            <img src="https://picsum.photos/seed/fm-env-foret/1200/675" alt="">
+            <div class="cover__chips">
+              <button class="chip" type="button">Remplacer</button>
+              <button class="chip" type="button">Retirer</button>
+            </div>
+          </div>
+          <label style="display:block;margin-top:16px;">
+            <span class="alt-label">Texte alternatif</span>
+            <input class="alt-input" type="text" value="Des pompiers luttent contre un feu de forêt dans le sud-ouest.">
+          </label>
+          <p class="help">Requis pour l'accessibilité — décrivez brièvement l'image.</p>
+        </div>
+
+      </div>
+
+      <div class="settings__actions">
+        <div style="height:1px;background:var(--line);margin-bottom:20px;"></div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <button class="btn-block btn-block--secondary" type="button">Enregistrer le brouillon</button>
+          <button class="btn-block btn-block--primary" type="button">Publier</button>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+</body>
+</html>

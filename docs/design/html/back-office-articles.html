@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Francomètre — Back-office · Articles</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     FRANCOMÈTRE — Back-office · Liste des articles.
+     Bascule : class="dark" sur <html>.
+     ============================================================ */
+  :root{
+    --paper:#FFFFFF; --surface:#F5F5F5; --ink:#0A0A0A;
+    --muted:#6F6F6F; --line:#E6E6E6; --accent:#1F35FF;
+    --dot:#C8C8C8;
+  }
+  html.dark{
+    --paper:#0B0B0C; --surface:#151517; --ink:#F5F5F5;
+    --muted:#9A9A9A; --line:#262628; --accent:#8A97FF;
+    --dot:#3A3A3D;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Instrument Sans',sans-serif;
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  img{display:block;}
+  ::selection{background:var(--accent);color:#FFFFFF;}
+
+  .wm-blanc{display:none;}
+  html.dark .wm-noir{display:none;}
+  html.dark .wm-blanc{display:block;}
+
+  .bo{display:flex;max-width:1440px;min-height:900px;margin:0 auto;
+      border:1px solid var(--line);background:var(--paper);}
+
+  /* ---------- Sidebar back-office (240 px) ---------- */
+  .bo-side{flex:0 0 240px;width:240px;border-right:1px solid var(--line);
+           padding:26px 0 30px;display:flex;flex-direction:column;justify-content:space-between;}
+  .bo-side__logo{height:30px;width:auto;margin:0 24px;}
+  .bo-nav{display:flex;flex-direction:column;margin-top:40px;}
+  .bo-nav a{display:block;font-weight:500;font-size:15px;color:var(--ink);
+            padding:12px 24px;border-left:3px solid transparent;}
+  .bo-nav a:hover{text-decoration:underline;text-underline-offset:2px;}
+  .bo-nav a[aria-current="page"]{font-weight:600;background:var(--surface);
+            border-left:3px solid var(--accent);padding-left:21px;}
+  .bo-logout{margin:0 24px;font-weight:500;font-size:14px;color:var(--muted);}
+
+  /* ---------- Contenu ---------- */
+  .bo-main{flex:1;min-width:0;padding:40px 48px 56px;}
+  .bo-head{display:flex;align-items:center;justify-content:space-between;}
+  .bo-h1{font-family:'Archivo',sans-serif;font-weight:700;font-size:32px;letter-spacing:-.02em;
+         line-height:1;color:var(--ink);margin:0;}
+  .btn-primary{font-family:'Archivo',sans-serif;font-weight:600;font-size:14px;letter-spacing:.01em;
+               color:var(--paper);background:var(--ink);border:1px solid var(--ink);border-radius:0;
+               padding:13px 22px;cursor:pointer;transition:background 150ms ease;}
+  .btn-primary:hover{background:var(--accent);border-color:var(--accent);}
+
+  /* ---------- Barre de filtres ---------- */
+  .filters{display:flex;align-items:flex-end;gap:28px;margin-top:36px;}
+  .filters__search{flex:1;min-width:0;display:flex;align-items:center;gap:10px;
+                   border-bottom:1px solid var(--line);padding:9px 0;}
+  .filters__search input{width:100%;font-size:15px;color:var(--ink);background:transparent;
+                         border:0;outline:none;padding:0;}
+  .filters__search input::placeholder{color:var(--muted);opacity:1;}
+  .filters__field span{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .select{position:relative;border-bottom:1px solid var(--line);}
+  .select select{width:100%;font-family:'Instrument Sans',sans-serif;font-size:15px;color:var(--ink);
+                 background:transparent;border:0;border-radius:0;outline:none;padding:8px 24px 8px 0;
+                 -webkit-appearance:none;appearance:none;cursor:pointer;}
+  .select svg{position:absolute;right:0;top:50%;transform:translateY(-50%);pointer-events:none;}
+
+  /* ---------- Table ---------- */
+  .table{margin-top:40px;}
+  .trow{display:grid;grid-template-columns:64px minmax(0,1fr) 148px 110px 78px 132px 150px;
+        gap:20px;align-items:center;}
+  .thead{padding:0 0 12px;border-bottom:1px solid var(--line);
+         font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;
+         text-transform:uppercase;color:var(--muted);}
+  .thead .right{text-align:right;}
+  .tbody .trow{padding:14px 0;border-bottom:1px solid var(--line);transition:background 120ms ease;}
+  .tbody .trow:hover{background:var(--surface);}
+  .thumb{width:64px;height:36px;background:var(--surface) center/cover no-repeat;}
+  .t-titre{min-width:0;font-weight:500;font-size:15px;color:var(--ink);line-height:1.35;
+           overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .t-rubrique,.t-date{font-size:14px;color:var(--muted);}
+  .t-date{font-variant-numeric:tabular-nums;}
+  .t-statut{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+  .t-statut--publie{color:var(--ink);}
+  .t-statut--brouillon{color:var(--muted);}
+  .t-rang{font-family:'Archivo',sans-serif;font-weight:600;font-size:15px;font-variant-numeric:tabular-nums;}
+  .t-rang--une{color:var(--accent);}
+  .t-rang--non{color:var(--muted);}
+  .t-actions{display:flex;justify-content:flex-end;gap:16px;font-size:13px;}
+  .t-actions a{text-decoration:underline;text-underline-offset:2px;}
+  .t-actions .edit{color:var(--ink);}
+  .t-actions .del{color:var(--muted);}
+
+  /* ---------- Pagination ---------- */
+  .pagination{display:flex;align-items:center;justify-content:center;gap:22px;padding-top:40px;
+              font-weight:500;font-size:15px;font-variant-numeric:tabular-nums;}
+  .pagination .prev{color:var(--muted);}
+  .pagination .sep{color:var(--dot);}
+  .pagination .pages{display:flex;align-items:center;gap:20px;}
+  .pagination .pages a{color:var(--ink);text-decoration:none;}
+  .pagination .pages a:hover{text-decoration:underline;text-underline-offset:2px;}
+  .pagination .pages .current{color:var(--accent);font-weight:600;}
+  .pagination .pages .more{color:var(--muted);}
+  .pagination .next{color:var(--ink);text-decoration:none;}
+
+  a{color:var(--accent);}
+</style>
+</head>
+
+<body>
+<div class="bo">
+
+  <!-- SIDEBAR -->
+  <aside class="bo-side">
+    <div>
+      <img class="bo-side__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre">
+      <img class="bo-side__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre">
+      <nav class="bo-nav">
+        <a href="#" aria-current="page">Articles</a>
+        <a href="back-office-composer-la-une.html">À la une</a>
+        <a href="#">Médias</a>
+      </nav>
+    </div>
+    <a class="bo-logout" href="connexion.html">Déconnexion</a>
+  </aside>
+
+  <!-- CONTENU -->
+  <main class="bo-main">
+
+    <div class="bo-head">
+      <h1 class="bo-h1">Articles</h1>
+      <button class="btn-primary" type="button">Nouvel article</button>
+    </div>
+
+    <!-- Filtres -->
+    <div class="filters">
+      <div class="filters__search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg>
+        <input type="text" placeholder="Rechercher un article">
+      </div>
+      <label class="filters__field" style="flex:0 0 220px;">
+        <span>Rubrique</span>
+        <div class="select">
+          <select><option>Toutes les rubriques</option><option>Économie</option><option>Environnement</option><option>Culture</option></select>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+      </label>
+      <label class="filters__field" style="flex:0 0 180px;">
+        <span>Statut</span>
+        <div class="select">
+          <select><option>Tous</option><option>Brouillon</option><option>Publié</option></select>
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+        </div>
+      </label>
+    </div>
+
+    <!-- Table -->
+    <div class="table">
+      <div class="trow thead">
+        <div></div><div>Titre</div><div>Rubrique</div><div>Statut</div><div>À la une</div><div>Date</div><div class="right">Actions</div>
+      </div>
+      <div class="tbody">
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-hero-eu/160/90');"></div>
+          <div class="t-titre">Alliance franco-allemande sur les batteries : douze milliards pour relocaliser</div>
+          <div class="t-rubrique">Diplomatie</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--une">01</div>
+          <div class="t-date">14 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-eco-top/160/90');"></div>
+          <div class="t-titre">L'inflation repasse sous les 2 % pour la première fois depuis trois ans</div>
+          <div class="t-rubrique">Économie</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--une">02</div>
+          <div class="t-date">14 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-env-top/160/90');"></div>
+          <div class="t-titre">Canicule précoce : seize départements placés en vigilance orange</div>
+          <div class="t-rubrique">Environnement</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--une">03</div>
+          <div class="t-date">14 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-sante-top/160/90');"></div>
+          <div class="t-titre">Déserts médicaux : le plan de la Sécurité sociale divise les élus locaux</div>
+          <div class="t-rubrique">Santé</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--une">04</div>
+          <div class="t-date">13 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-sport-top/160/90');"></div>
+          <div class="t-titre">Tour de France : la première étape de montagne rebat les cartes</div>
+          <div class="t-rubrique">Sport</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--une">05</div>
+          <div class="t-date">13 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-d1/160/90');"></div>
+          <div class="t-titre">Souveraineté numérique : un cloud public européen entre en service</div>
+          <div class="t-rubrique">Technologie</div>
+          <div class="t-statut t-statut--brouillon">Brouillon</div>
+          <div class="t-rang t-rang--non">—</div>
+          <div class="t-date">13 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-d2/160/90');"></div>
+          <div class="t-titre">Le Festival d'Avignon ouvre sous le signe de la jeunesse</div>
+          <div class="t-rubrique">Culture</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--non">—</div>
+          <div class="t-date">12 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-d3/160/90');"></div>
+          <div class="t-titre">Réforme du lycée : ce qui change à la rentrée pour les élèves de seconde</div>
+          <div class="t-rubrique">Éducation</div>
+          <div class="t-statut t-statut--brouillon">Brouillon</div>
+          <div class="t-rang t-rang--non">—</div>
+          <div class="t-date">12 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-d5/160/90');"></div>
+          <div class="t-titre">Littoral : le recul du trait de côte s'accélère sur la façade atlantique</div>
+          <div class="t-rubrique">Environnement</div>
+          <div class="t-statut t-statut--brouillon">Brouillon</div>
+          <div class="t-rang t-rang--non">—</div>
+          <div class="t-date">11 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+        <div class="trow">
+          <div class="thumb" style="background-image:url('https://picsum.photos/seed/fm-d6/160/90');"></div>
+          <div class="t-titre">Pouvoir d'achat : la consommation des ménages repart timidement</div>
+          <div class="t-rubrique">Économie</div>
+          <div class="t-statut t-statut--publie">Publié</div>
+          <div class="t-rang t-rang--non">—</div>
+          <div class="t-date">11 juil. 2026</div>
+          <div class="t-actions"><a class="edit" href="back-office-editeur.html">Modifier</a><a class="del" href="#">Supprimer</a></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <nav class="pagination" aria-label="Pagination">
+      <span class="prev">Précédent</span>
+      <span class="sep">·</span>
+      <div class="pages">
+        <span class="current" aria-current="page">1</span>
+        <a href="#">2</a>
+        <a href="#">3</a>
+        <span class="more">…</span>
+        <a href="#">7</a>
+      </div>
+      <span class="sep">·</span>
+      <a class="next" href="#">Suivant</a>
+    </nav>
+
+  </main>
+</div>
+</body>
+</html>

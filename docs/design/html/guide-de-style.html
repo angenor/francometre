@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Francomètre — Guide de style</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     FRANCOMÈTRE — Guide de style (planche de référence).
+     Document en thème clair ; les échantillons montrent les deux thèmes
+     avec leurs valeurs littérales. Voir tokens.md.
+     ============================================================ */
+  :root{
+    --paper:#FFFFFF; --surface:#F5F5F5; --ink:#0A0A0A;
+    --muted:#6F6F6F; --line:#E6E6E6; --accent:#1F35FF;
+    --content:1280px; --gutter:24px;
+  }
+  /* Valeurs sombres, pour référence :
+     --paper:#0B0B0C; --surface:#151517; --ink:#F5F5F5;
+     --muted:#9A9A9A; --line:#262628; --accent:#8A97FF; */
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Instrument Sans',sans-serif;
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  img{max-width:100%;display:block;}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  ::selection{background:var(--accent);color:#FFFFFF;}
+
+  .wrap{max-width:var(--content);margin:0 auto;padding:0 var(--gutter);}
+
+  /* ---------- Filet coupé (signature) ---------- */
+  .filet-coupe{position:relative;height:5px;width:100%;color:var(--line);}
+  .filet-coupe .fc-l{position:absolute;left:0;top:4px;height:1px;background:currentColor;width:var(--pos,66%);}
+  .filet-coupe .fc-d{position:absolute;top:0;left:var(--pos,66%);width:64px;height:5px;}
+  .filet-coupe .fc-r{position:absolute;top:0;height:1px;background:currentColor;left:calc(var(--pos,66%) + 64px);right:0;}
+
+  /* ---------- Typographie utilitaire ---------- */
+  .eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;line-height:1;letter-spacing:.1em;
+           text-transform:uppercase;color:var(--muted);}
+  .h-section{font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(1.75rem,3vw,2.5rem);
+             letter-spacing:-.02em;line-height:1.05;color:var(--ink);margin:12px 0 0;}
+  .lead{font-size:17px;line-height:1.6;color:var(--muted);margin:16px 0 0;}
+  .sec{padding:64px 0;}
+  .sec__head{max-width:760px;margin:0 0 44px;}
+  .mini-label{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;
+              text-transform:uppercase;color:var(--muted);}
+
+  /* ---------- Grilles génériques ---------- */
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:24px;}
+  .box{border:1px solid var(--line);padding:24px;}
+  .box--dark{background:#0B0B0C;border-color:#262628;}
+
+  /* ---------- Nuancier ---------- */
+  .swatch-row{display:grid;grid-template-columns:44px 1fr auto;gap:16px;align-items:center;padding:14px 0;}
+  .swatch{width:44px;height:44px;}
+  .swatch-name{font-family:'Archivo',sans-serif;font-weight:600;font-size:15px;}
+  .swatch-use{font-size:13px;margin-top:2px;}
+  .swatch-hex{font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;}
+
+  /* ---------- Card (composant) ---------- */
+  .card{display:block;color:inherit;}
+  .card__media{position:relative;overflow:hidden;aspect-ratio:16/9;background:var(--surface);
+               display:flex;align-items:center;justify-content:center;}
+  .card__ratio{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;letter-spacing:.1em;color:#9A9A9A;
+               transition:transform 150ms ease;}
+  .card:hover .card__ratio{transform:scale(1.03);}
+  .card__body{padding-top:16px;}
+  .card__title{margin:8px 0 0;font-family:'Archivo',sans-serif;font-weight:600;font-size:20px;letter-spacing:-.02em;
+               line-height:1.25;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  .card:hover .card__title{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  .card__meta{margin-top:12px;font-size:13px;color:var(--muted);}
+  .card--sansimage{border-top:2px solid var(--ink);padding-top:16px;}
+
+  /* ---------- Interface ---------- */
+  .btn{font-family:'Archivo',sans-serif;font-weight:600;font-size:14px;letter-spacing:.01em;border-radius:0;
+       padding:13px 22px;cursor:pointer;transition:background 150ms ease,border-color 150ms ease;}
+  .btn--primary{color:#FFFFFF;background:#0A0A0A;border:1px solid #0A0A0A;}
+  .btn--primary:hover{background:#2A2A2A;border-color:#2A2A2A;}
+  .btn--secondary{color:#0A0A0A;background:transparent;border:1px solid #0A0A0A;}
+  .btn--secondary:hover{background:#F5F5F5;}
+  .btn--tertiary{color:#0A0A0A;background:transparent;border:0;padding:13px 4px;text-underline-offset:4px;}
+  .btn--tertiary:hover{text-decoration:underline;}
+  .btn--disabled{color:#9A9A9A;background:transparent;border:1px solid #E6E6E6;cursor:not-allowed;}
+  .field-label{display:block;font-size:13px;color:var(--ink);margin-bottom:8px;}
+  .field-input{width:100%;font-family:'Instrument Sans',sans-serif;font-size:16px;color:var(--ink);background:transparent;
+               border:0;border-bottom:1px solid var(--line);border-radius:0;padding:10px 0;outline:none;transition:border-color 150ms ease;}
+  .field-input::placeholder{color:#9A9A9A;opacity:1;}
+  .field-input:focus{border-bottom-color:var(--ink);}
+  .field-input--focus{border-bottom:1px solid var(--ink);}
+
+  /* ---------- Géométrie ---------- */
+  .scale-row{display:grid;grid-template-columns:52px 1fr;gap:16px;align-items:center;}
+  .scale-bar{height:12px;background:var(--ink);}
+  .spec-row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);}
+  .spec-row:last-child{border-bottom:0;}
+  .grid12{display:grid;grid-template-columns:repeat(12,1fr);gap:24px;}
+  .grid12 > div{height:56px;background:var(--surface);border:1px solid var(--line);}
+
+  /* ---------- Interdits ---------- */
+  .ban{display:grid;grid-template-columns:28px 1fr;gap:16px;align-items:baseline;padding:16px 0;border-top:1px solid var(--line);}
+  .ban__n{font-size:13px;color:#9A9A9A;font-variant-numeric:tabular-nums;}
+  .ban__t{font-family:'Archivo',sans-serif;font-weight:600;font-size:18px;letter-spacing:-.01em;color:var(--ink);}
+</style>
+</head>
+
+<body>
+
+<!-- ================= MASTHEAD ================= -->
+<div class="wrap">
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:28px 0;gap:24px;">
+    <img src="../assets/wordmark-noir.png" alt="FRANCOMÈTRE" style="height:22px;width:auto;">
+    <div style="font-weight:500;font-size:12px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;">Guide de style · v1.0</div>
+  </div>
+</div>
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+
+<!-- HÉRO -->
+<div class="wrap">
+  <section style="padding:80px 0 64px;">
+    <p class="eyebrow" style="margin:0;">Francomètre — Planche de référence</p>
+    <h1 style="font-family:'Archivo',sans-serif;font-weight:800;font-size:clamp(2.5rem,4vw,4rem);letter-spacing:-.02em;line-height:1.02;color:var(--ink);margin:22px 0 0;">L'actualité,<br>mesurée.</h1>
+    <p style="font-size:19px;line-height:1.6;color:var(--ink);max-width:620px;margin:28px 0 0;">L'image porte l'information, le chrome disparaît. Densité forte, hiérarchie brutale. «&#8239;Mesurée&#8239;» : au sens de quantifiée, et au sens de sans emballement.</p>
+    <p style="font-size:14px;line-height:1.6;color:var(--muted);max-width:620px;margin:20px 0 0;">Cette planche fixe le système visuel de francometre.com : identité, couleurs, typographie, la signature du filet coupé, le composant card, l'interface et la géométrie.</p>
+  </section>
+</div>
+
+<!-- ================= 01 — IDENTITÉ ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">01 — Identité</p>
+      <h2 class="h-section">Le mot-symbole</h2>
+      <p class="lead">Fourni. La coupe à 3,5° est intégrée au dessin. On ne le redessine pas, on ne le recadre pas, on ne l'incline pas — on construit autour.</p>
+    </header>
+    <div class="g2">
+      <div class="box">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+          <span class="mini-label">Clair</span><span style="font-weight:500;font-size:12px;color:var(--muted);">sur #FFFFFF</span>
+        </div>
+        <div style="min-height:180px;display:flex;align-items:center;justify-content:center;padding:24px 8px;">
+          <img src="../assets/wordmark-noir.png" alt="FRANCOMÈTRE" style="width:min(100%,380px);height:auto;">
+        </div>
+      </div>
+      <div class="box box--dark">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+          <span class="mini-label" style="color:#9A9A9A;">Sombre</span><span style="font-weight:500;font-size:12px;color:#9A9A9A;">sur #0B0B0C</span>
+        </div>
+        <div style="min-height:180px;display:flex;align-items:center;justify-content:center;padding:24px 8px;">
+          <img src="../assets/wordmark-blanc.png" alt="FRANCOMÈTRE" style="width:min(100%,380px);height:auto;">
+        </div>
+      </div>
+    </div>
+    <div class="g3" style="margin-top:32px;">
+      <div style="border-top:1px solid var(--line);padding-top:14px;"><div class="mini-label" style="color:var(--ink);">Ne pas redessiner</div><div style="font-size:13px;line-height:1.55;color:var(--muted);margin-top:6px;">La coupe fait partie du dessin. Aucune retouche des contreformes ni de l'angle.</div></div>
+      <div style="border-top:1px solid var(--line);padding-top:14px;"><div class="mini-label" style="color:var(--ink);">Ne pas incliner</div><div style="font-size:13px;line-height:1.55;color:var(--muted);margin-top:6px;">Toujours d'aplomb. La seule diagonale autorisée est celle déjà présente.</div></div>
+      <div style="border-top:1px solid var(--line);padding-top:14px;"><div class="mini-label" style="color:var(--ink);">Toujours sur aplat</div><div style="font-size:13px;line-height:1.55;color:var(--muted);margin-top:6px;">Noir sur fond clair, blanc sur fond sombre. Jamais posé sur une photo.</div></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 02 — COULEURS ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">02 — Couleurs</p>
+      <h2 class="h-section">Palette</h2>
+      <p class="lead">Deux thèmes. L'accent est rationné : numéros de la Une, soulignement de la rubrique active, liens dans le corps d'article. Nulle part ailleurs — les photos apportent toute la couleur.</p>
+    </header>
+    <div class="g2">
+      <!-- CLAIR -->
+      <div class="box" style="padding:24px 24px 8px;">
+        <div class="mini-label" style="margin-bottom:8px;">Thème clair</div>
+        <div class="swatch-row" style="border-bottom:1px solid var(--line);"><div class="swatch" style="background:#FFFFFF;border:1px solid #E6E6E6;"></div><div><div class="swatch-name">Fond</div><div class="swatch-use" style="color:var(--muted);">Fond de page</div></div><div class="swatch-hex" style="color:var(--muted);">#FFFFFF</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid var(--line);"><div class="swatch" style="background:#F5F5F5;border:1px solid #E6E6E6;"></div><div><div class="swatch-name">Blocs</div><div class="swatch-use" style="color:var(--muted);">Aplats, cartes</div></div><div class="swatch-hex" style="color:var(--muted);">#F5F5F5</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid var(--line);"><div class="swatch" style="background:#0A0A0A;"></div><div><div class="swatch-name">Texte</div><div class="swatch-use" style="color:var(--muted);">Titres, corps</div></div><div class="swatch-hex" style="color:var(--muted);">#0A0A0A</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid var(--line);"><div class="swatch" style="background:#6F6F6F;"></div><div><div class="swatch-name">Méta</div><div class="swatch-use" style="color:var(--muted);">Dates, légendes</div></div><div class="swatch-hex" style="color:var(--muted);">#6F6F6F</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid var(--line);"><div class="swatch" style="background:#E6E6E6;"></div><div><div class="swatch-name">Filets</div><div class="swatch-use" style="color:var(--muted);">Séparateurs 1 px</div></div><div class="swatch-hex" style="color:var(--muted);">#E6E6E6</div></div>
+        <div class="swatch-row"><div class="swatch" style="background:#1F35FF;"></div><div><div class="swatch-name">Accent</div><div class="swatch-use" style="color:var(--muted);">Rationné (voir ci-dessous)</div></div><div class="swatch-hex" style="color:#1F35FF;">#1F35FF</div></div>
+      </div>
+      <!-- SOMBRE -->
+      <div class="box box--dark" style="padding:24px 24px 8px;">
+        <div class="mini-label" style="color:#9A9A9A;margin-bottom:8px;">Thème sombre</div>
+        <div class="swatch-row" style="border-bottom:1px solid #262628;"><div class="swatch" style="background:#0B0B0C;border:1px solid #262628;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Fond</div><div class="swatch-use" style="color:#9A9A9A;">Fond de page</div></div><div class="swatch-hex" style="color:#9A9A9A;">#0B0B0C</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid #262628;"><div class="swatch" style="background:#151517;border:1px solid #262628;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Blocs</div><div class="swatch-use" style="color:#9A9A9A;">Aplats, cartes</div></div><div class="swatch-hex" style="color:#9A9A9A;">#151517</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid #262628;"><div class="swatch" style="background:#F5F5F5;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Texte</div><div class="swatch-use" style="color:#9A9A9A;">Titres, corps</div></div><div class="swatch-hex" style="color:#9A9A9A;">#F5F5F5</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid #262628;"><div class="swatch" style="background:#9A9A9A;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Méta</div><div class="swatch-use" style="color:#9A9A9A;">Dates, légendes</div></div><div class="swatch-hex" style="color:#9A9A9A;">#9A9A9A</div></div>
+        <div class="swatch-row" style="border-bottom:1px solid #262628;"><div class="swatch" style="background:#262628;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Filets</div><div class="swatch-use" style="color:#9A9A9A;">Séparateurs 1 px</div></div><div class="swatch-hex" style="color:#9A9A9A;">#262628</div></div>
+        <div class="swatch-row"><div class="swatch" style="background:#8A97FF;"></div><div><div class="swatch-name" style="color:#F5F5F5;">Accent</div><div class="swatch-use" style="color:#9A9A9A;">Rationné (voir ci-dessous)</div></div><div class="swatch-hex" style="color:#8A97FF;">#8A97FF</div></div>
+      </div>
+    </div>
+
+    <!-- accent rationné -->
+    <div style="margin-top:32px;border-top:1px solid var(--line);padding-top:28px;">
+      <div class="mini-label" style="color:var(--ink);">L'accent, rationné — trois usages</div>
+      <div class="g3" style="margin-top:20px;">
+        <div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Numéros de la Une</div>
+          <div style="display:flex;gap:16px;align-items:baseline;"><span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;color:#1F35FF;">01</span><span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;color:#1F35FF;">02</span><span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:28px;letter-spacing:-.02em;color:#1F35FF;">03</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;">Le classement décidé par la rédaction, rendu visible.</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Rubrique active</div>
+          <div style="display:flex;gap:22px;align-items:baseline;font-weight:500;font-size:16px;"><span style="color:var(--muted);">Politique</span><span style="color:#1F35FF;border-bottom:2px solid #1F35FF;padding-bottom:4px;">Économie</span><span style="color:var(--muted);">Culture</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:12px;line-height:1.5;">Le soulignement, jamais un fond.</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Lien dans le corps</div>
+          <p style="font-size:16px;line-height:1.6;color:var(--ink);margin:0;">Une hausse confirmée par le <a href="#">dernier baromètre trimestriel</a> publié mardi.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 03 — TYPOGRAPHIE ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">03 — Typographie</p>
+      <h2 class="h-section">Deux familles</h2>
+      <p class="lead">Archivo pour les titres et les eyebrows (600–800, tracking −0,02em). Instrument Sans pour le corps, l'interface et les métadonnées (400–600).</p>
+    </header>
+    <div class="g2" style="margin-bottom:40px;">
+      <div class="box" style="padding:28px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:18px;letter-spacing:-.02em;">Archivo</span><span style="font-size:12px;color:var(--muted);">Titres · eyebrows</span></div>
+        <div style="font-family:'Archivo',sans-serif;font-weight:800;font-size:88px;line-height:1;letter-spacing:-.02em;margin:20px 0 8px;">Aa</div>
+        <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:16px;letter-spacing:-.01em;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:16px;letter-spacing:-.01em;margin-top:2px;font-variant-numeric:tabular-nums;">0123456789 À É È Ç Ù</div>
+        <div style="display:flex;gap:20px;margin-top:20px;border-top:1px solid var(--line);padding-top:16px;"><span style="font-family:'Archivo',sans-serif;font-weight:600;font-size:15px;">600</span><span style="font-family:'Archivo',sans-serif;font-weight:700;font-size:15px;">700</span><span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:15px;">800</span></div>
+      </div>
+      <div class="box" style="padding:28px;">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;"><span style="font-weight:600;font-size:18px;">Instrument Sans</span><span style="font-size:12px;color:var(--muted);">Corps · interface · méta</span></div>
+        <div style="font-weight:400;font-size:88px;line-height:1;margin:20px 0 8px;">Aa</div>
+        <div style="font-weight:400;font-size:16px;">ABCDEFGHIJKLMNOPQRSTUVWXYZ</div>
+        <div style="font-weight:400;font-size:16px;margin-top:2px;font-variant-numeric:tabular-nums;">0123456789 À É È Ç Ù</div>
+        <div style="display:flex;gap:20px;margin-top:20px;border-top:1px solid var(--line);padding-top:16px;"><span style="font-weight:400;font-size:15px;">400</span><span style="font-weight:500;font-size:15px;">500</span><span style="font-weight:600;font-size:15px;">600</span></div>
+      </div>
+    </div>
+
+    <!-- échelle -->
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);">
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;">Eyebrow<br>11 px · 600 · +0,1em<br>Archivo · MAJUSCULES</div>
+      <div class="eyebrow" style="color:var(--ink);">Rubrique active</div>
+    </div>
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);">
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;">Titre de card<br>20 px · 600 · −0,02em<br>Archivo</div>
+      <div style="font-family:'Archivo',sans-serif;font-weight:600;font-size:20px;letter-spacing:-.02em;line-height:1.25;">Le titre d'une card, sur trois lignes maximum avant troncature</div>
+    </div>
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);">
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;">Titre héros<br>clamp(2.5–4rem) · 700<br>Archivo · interligne 1,05</div>
+      <div style="font-family:'Archivo',sans-serif;font-weight:700;font-size:clamp(2.5rem,4vw,4rem);letter-spacing:-.02em;line-height:1.05;">L'actualité, mesurée.</div>
+    </div>
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);">
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;">Corps d'article<br>17 px · 400<br>Instrument Sans · interligne 1,6</div>
+      <p style="font-weight:400;font-size:17px;line-height:1.6;margin:0;max-width:62ch;">Chaque semaine, la rédaction classe les cinq sujets qui ont le plus pesé sur le débat public. Le corps reste sobre : dix-sept pixels, interligne généreux, et un <a href="#">lien en accent</a> lorsque la source mérite d'être consultée.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:220px 1fr;gap:24px;align-items:baseline;padding:22px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);">
+      <div style="font-size:13px;line-height:1.5;color:var(--muted);font-variant-numeric:tabular-nums;">Méta<br>13 px · 400<br>Instrument Sans · couleur méta</div>
+      <div style="font-weight:400;font-size:13px;color:var(--muted);">14 juillet 2026 · Économie · 4 min de lecture</div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 04 — SIGNATURE ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">04 — Signature</p>
+      <h2 class="h-section">Le filet coupé</h2>
+      <p class="lead">Le seul ornement. À la séparation de deux sections, la ligne de 1 px se brise une seule fois — 4 px de dénivelé pour 64 px parcourus, soit 3,5° — puis reprend 4 px plus haut. Rien de plus.</p>
+    </header>
+
+    <!-- schéma agrandi avec cotes -->
+    <div class="box" style="padding:40px 24px 28px;">
+      <div style="width:600px;max-width:100%;margin:0 auto;">
+        <svg viewBox="0 0 600 220" style="display:block;width:100%;height:auto;">
+          <line x1="140" y1="150" x2="560" y2="150" stroke="#D8D8D8" stroke-width="1" stroke-dasharray="2 4"></line>
+          <line x1="524" y1="126" x2="524" y2="150" stroke="#D8D8D8" stroke-width="1" stroke-dasharray="2 3"></line>
+          <polyline points="60,150 140,150 524,126 560,126" fill="none" stroke="#0A0A0A" stroke-width="2" stroke-linejoin="miter" stroke-linecap="square"></polyline>
+          <line x1="140" y1="150" x2="140" y2="192" stroke="#C8C8C8" stroke-width="1"></line>
+          <line x1="524" y1="126" x2="524" y2="192" stroke="#C8C8C8" stroke-width="1"></line>
+          <line x1="140" y1="188" x2="524" y2="188" stroke="#0A0A0A" stroke-width="1"></line>
+          <text x="332" y="182" text-anchor="middle" font-family="'Instrument Sans'" font-size="14" font-weight="600" fill="#0A0A0A">64 px</text>
+          <line x1="548" y1="126" x2="548" y2="150" stroke="#0A0A0A" stroke-width="1"></line>
+          <text x="558" y="142" text-anchor="start" font-family="'Instrument Sans'" font-size="14" font-weight="600" fill="#0A0A0A">4 px</text>
+          <text x="204" y="146" text-anchor="start" font-family="'Instrument Sans'" font-size="13" font-weight="600" fill="#0A0A0A">3,5°</text>
+          <text x="300" y="212" text-anchor="middle" font-family="'Instrument Sans'" font-size="12" fill="#6F6F6F">Schéma agrandi ×6 — trait de 1 px, en couleur filet</text>
+        </svg>
+      </div>
+    </div>
+
+    <!-- taille réelle -->
+    <div style="margin-top:24px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;"><span class="mini-label">Taille réelle</span><span style="font-size:12px;color:var(--muted);">1 px · discrétion voulue</span></div>
+      <div class="filet-coupe" style="--pos:66%"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div>
+    </div>
+
+    <!-- les deux filets -->
+    <div class="g2" style="margin-top:40px;">
+      <div>
+        <div class="mini-label" style="color:var(--ink);">Filet ordinaire</div>
+        <div style="height:1px;background:var(--line);margin:16px 0;"></div>
+        <div style="font-size:13px;line-height:1.55;color:var(--muted);">1 px, parfaitement horizontal. À l'intérieur d'une section : sous une ligne de tableau, sous un champ de formulaire.</div>
+      </div>
+      <div>
+        <div class="mini-label" style="color:var(--ink);">Filet coupé</div>
+        <div class="filet-coupe" style="--pos:60%;margin:16px 0;"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div>
+        <div style="font-size:13px;line-height:1.55;color:var(--muted);">Se brise une seule fois, à 3,5°. Entre deux sections, et lui seul.</div>
+      </div>
+    </div>
+
+    <div style="margin-top:28px;border-top:1px solid var(--line);padding-top:16px;font-size:13px;line-height:1.6;color:var(--muted);max-width:760px;">La coupe existe déjà dans le logo, et se répète ici, à la séparation des sections. Ce sont ses deux seules apparitions. Pas de photo coupée, pas de card cisaillée, pas de titre tranché, pas de diagonale décorative — une troisième fois, et la signature devient un tic.</div>
+  </section>
+</div>
+
+<!-- ================= 05 — CARD ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">05 — Composant</p>
+      <h2 class="h-section">La card</h2>
+      <p class="lead">Le composant unique du site, réutilisé partout. Image 16:9, eyebrow (rubrique), titre sur trois lignes maximum, date. Pas de chapô, pas de bouton — la card entière est cliquable.</p>
+    </header>
+    <div class="g3">
+      <div>
+        <div class="mini-label" style="margin-bottom:14px;">Repos</div>
+        <a class="card" href="#">
+          <div class="card__media"><span class="card__ratio">16 : 9</span></div>
+          <div class="card__body"><p class="eyebrow" style="margin:0;">Politique</p><h3 class="card__title">L'Assemblée adopte le budget après une nuit de débats sous tension</h3><div class="card__meta">14 juillet 2026</div></div>
+        </a>
+      </div>
+      <div>
+        <div class="mini-label" style="margin-bottom:14px;">Survol <span style="color:#9A9A9A;font-weight:500;letter-spacing:0;text-transform:none;">— zoom 1.03 + soulignement, 150 ms</span></div>
+        <a class="card" href="#">
+          <div class="card__media"><span class="card__ratio" style="transform:scale(1.03);">16 : 9</span></div>
+          <div class="card__body"><p class="eyebrow" style="margin:0;">Économie</p><h3 class="card__title" style="text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;">L'inflation ralentit pour le troisième mois consécutif</h3><div class="card__meta">13 juillet 2026</div></div>
+        </a>
+      </div>
+      <div>
+        <div class="mini-label" style="margin-bottom:14px;">Sans image</div>
+        <a class="card card--sansimage" href="#">
+          <p class="eyebrow" style="margin:0;">Culture</p><h3 class="card__title">En brèves : le prix du roman de la rentrée dévoilé jeudi à Paris</h3><div class="card__meta">12 juillet 2026</div>
+        </a>
+      </div>
+    </div>
+    <div style="margin-top:40px;border-top:1px solid var(--line);padding-top:16px;max-width:760px;">
+      <div style="font-size:13px;line-height:1.6;color:var(--muted);">Survol : léger zoom de l'image (1.03) et soulignement du titre, en 150 ms. Aucun autre effet — pas d'ombre, pas de cisaillement. Le titre est tronqué à trois lignes par <span style="color:var(--ink);">-webkit-line-clamp</span>. La date, en méta, ferme la card. Aucun « lire la suite ».</div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 06 — INTERFACE ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">06 — Interface</p>
+      <h2 class="h-section">Boutons &amp; champs</h2>
+      <p class="lead">Rayon zéro, aucune ombre. Les champs se soulignent d'un filet ordinaire ; le focus le passe en noir. L'accent ne touche jamais un bouton.</p>
+    </header>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+      <div>
+        <div class="mini-label" style="margin-bottom:20px;">Boutons</div>
+        <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;">
+          <button class="btn btn--primary">Primaire</button>
+          <button class="btn btn--secondary">Secondaire</button>
+          <button class="btn btn--tertiary">Tertiaire</button>
+          <button class="btn btn--disabled" disabled>Indisponible</button>
+        </div>
+        <div style="font-size:13px;line-height:1.6;color:var(--muted);margin-top:20px;border-top:1px solid var(--line);padding-top:16px;">Primaire en noir plein, jamais en accent. Survolez : le fond s'éclaircit légèrement, sans ombre ni déplacement.</div>
+      </div>
+      <div>
+        <div class="mini-label" style="margin-bottom:20px;">Champs</div>
+        <div style="display:flex;flex-direction:column;gap:22px;max-width:420px;">
+          <label style="display:block;"><span class="field-label">Adresse e-mail</span><input class="field-input" type="email" placeholder="prenom@exemple.fr"></label>
+          <label style="display:block;"><span class="field-label">Recherche <span style="color:var(--muted);">— état focus</span></span><input class="field-input field-input--focus" type="text" value="élection municipale"></label>
+          <label style="display:block;"><span class="field-label">Message</span><textarea rows="2" placeholder="Votre correction ou signalement…" style="width:100%;font-family:'Instrument Sans',sans-serif;font-size:16px;line-height:1.5;color:var(--ink);background:transparent;border:1px solid var(--line);border-radius:0;padding:12px 14px;outline:none;resize:vertical;"></textarea></label>
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;"><input type="checkbox" checked style="width:18px;height:18px;border-radius:0;accent-color:#0A0A0A;"><span style="font-size:15px;">Recevoir l'infolettre quotidienne</span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 07 — GÉOMÉTRIE ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head">
+      <p class="eyebrow" style="margin:0;">07 — Géométrie</p>
+      <h2 class="h-section">Espacements</h2>
+      <p class="lead">Base 4 px. Gouttière 24 px. Conteneur 1440, contenu 1280. Écart entre sections : 80 px au bureau, 48 px sur mobile.</p>
+    </header>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:48px;">
+      <div>
+        <div class="mini-label" style="margin-bottom:20px;">Échelle · base 4 px</div>
+        <div style="display:flex;flex-direction:column;gap:12px;">
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">4</span><div class="scale-bar" style="width:4px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">8</span><div class="scale-bar" style="width:8px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">12</span><div class="scale-bar" style="width:12px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">16</span><div class="scale-bar" style="width:16px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">24</span><div class="scale-bar" style="width:24px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">32</span><div class="scale-bar" style="width:32px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">48</span><div class="scale-bar" style="width:48px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">64</span><div class="scale-bar" style="width:64px;"></div></div>
+          <div class="scale-row"><span style="font-weight:500;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;">80</span><div class="scale-bar" style="width:80px;"></div></div>
+        </div>
+      </div>
+      <div>
+        <div class="mini-label" style="margin-bottom:20px;">Cotes du système</div>
+        <div class="spec-row"><span style="font-size:15px;">Base</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">4 px</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Gouttière</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">24 px</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Conteneur (max)</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">1440 px</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Contenu</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">1280 px</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Écart de sections</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">80 / 48 px</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Rayon de bordure</span><span style="font-weight:500;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums;">0</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Ombre</span><span style="font-weight:500;font-size:14px;color:var(--muted);">aucune</span></div>
+        <div class="spec-row"><span style="font-size:15px;">Dégradé</span><span style="font-weight:500;font-size:14px;color:var(--muted);">aucun</span></div>
+      </div>
+    </div>
+    <div style="margin-top:40px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;"><span class="mini-label">Grille</span><span style="font-size:12px;color:var(--muted);">12 colonnes · gouttière 24 px · contenu 1280 px</span></div>
+      <div class="grid12"><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div><div></div></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= 08 — INTERDITS ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <section class="sec">
+    <header class="sec__head" style="margin-bottom:40px;">
+      <p class="eyebrow" style="margin:0;">08 — Cadre</p>
+      <h2 class="h-section">Interdits absolus</h2>
+      <p class="lead">Neuf éléments qui n'apparaissent jamais — sur cette planche comme sur tous les écrans suivants.</p>
+    </header>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 48px;">
+      <div class="ban"><span class="ban__n">01</span><span class="ban__t">Coins arrondis</span></div>
+      <div class="ban"><span class="ban__n">06</span><span class="ban__t">Emoji</span></div>
+      <div class="ban"><span class="ban__n">02</span><span class="ban__t">Ombres portées</span></div>
+      <div class="ban"><span class="ban__n">07</span><span class="ban__t">Lorem ipsum</span></div>
+      <div class="ban"><span class="ban__n">03</span><span class="ban__t">Dégradés</span></div>
+      <div class="ban"><span class="ban__n">08</span><span class="ban__t">Gros chiffres colorés en «&#8239;stat&#8239;»</span></div>
+      <div class="ban"><span class="ban__n">04</span><span class="ban__t">Glassmorphism</span></div>
+      <div class="ban" style="border-bottom:1px solid var(--line);"><span class="ban__n">09</span><span class="ban__t">Accent en fond de bloc</span></div>
+      <div class="ban" style="border-bottom:1px solid var(--line);"><span class="ban__n">05</span><span class="ban__t">Icônes décoratives</span></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= PIED DE PAGE ================= -->
+<div class="wrap"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+<div class="wrap">
+  <footer style="padding:36px 0 72px;display:flex;justify-content:space-between;align-items:flex-end;gap:24px;flex-wrap:wrap;">
+    <div>
+      <img src="../assets/wordmark-noir.png" alt="FRANCOMÈTRE" style="height:22px;width:auto;">
+      <div style="font-size:13px;color:var(--muted);margin-top:14px;">L'actualité, mesurée.</div>
+    </div>
+    <div style="font-weight:500;font-size:12px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;text-align:right;">Guide de style · v1.0<br>francometre.com</div>
+  </footer>
+</div>
+
+</body>
+</html>

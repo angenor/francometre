@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Francomètre — Écrans d'état</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     FRANCOMÈTRE — Écrans d'état : 404, 500, squelettes de chargement.
+     Chaque état est une page complète (rail + contenu + pied de page).
+     Bascule : class="dark" sur <html>.
+     ============================================================ */
+  :root{
+    --paper:#FFFFFF; --surface:#F5F5F5; --ink:#0A0A0A;
+    --muted:#6F6F6F; --line:#E6E6E6; --accent:#1F35FF;
+    --gutter:24px; --content:1280px;
+  }
+  html.dark{
+    --paper:#0B0B0C; --surface:#151517; --ink:#F5F5F5;
+    --muted:#9A9A9A; --line:#262628; --accent:#8A97FF;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);font-family:'Instrument Sans',sans-serif;
+       -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;}
+  img{max-width:100%;display:block;}
+  a{color:var(--accent);text-decoration:none;}
+  a:hover{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  ::selection{background:var(--accent);color:#FFFFFF;}
+
+  .wm-blanc{display:none;}
+  html.dark .wm-noir{display:none;}
+  html.dark .wm-blanc{display:block;}
+
+  /* Empilement des états + légende */
+  .states{display:flex;flex-direction:column;gap:64px;padding:40px 0;}
+  .state__caption{max-width:1280px;margin:0 auto;padding:0 var(--gutter) 14px;}
+  .state__eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:12px;letter-spacing:.14em;
+                  text-transform:uppercase;color:var(--muted);}
+  .state__name{margin:8px 0 0;font-family:'Archivo',sans-serif;font-weight:800;font-size:32px;line-height:1;
+               letter-spacing:-.02em;color:var(--ink);}
+  .state__note{margin:12px 0 0;font-size:15px;line-height:1.55;color:var(--muted);max-width:60ch;}
+
+  .frame{max-width:1440px;margin:0 auto;display:flex;align-items:stretch;
+         border:1px solid var(--line);background:var(--paper);overflow:hidden;}
+  .content{max-width:var(--content);margin:0 auto;padding:0 var(--gutter);}
+
+  /* ---------- Rail ---------- */
+  .rail{flex:0 0 248px;width:248px;border-right:1px solid var(--line);
+        padding:26px 28px 30px;display:flex;flex-direction:column;justify-content:space-between;gap:48px;}
+  .rail__logo{height:30px;width:auto;}
+  .rail__search{display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);
+                padding-bottom:12px;margin-top:34px;color:var(--ink);cursor:pointer;}
+  .rail__search span{font-size:15px;color:var(--muted);}
+  .nav{display:flex;flex-direction:column;margin-top:24px;}
+  .nav a{display:flex;align-items:center;gap:12px;font-weight:500;font-size:16px;color:var(--ink);padding:8px 0;}
+  .nav svg{flex:0 0 auto;opacity:.55;}
+  .rail__toggle{display:flex;align-items:center;gap:10px;color:var(--ink);cursor:pointer;}
+  .rail__toggle span{font-size:14px;color:var(--muted);}
+
+  .filet-coupe{position:relative;height:5px;width:100%;color:var(--line);}
+  .filet-coupe .fc-l{position:absolute;left:0;top:4px;height:1px;background:currentColor;width:var(--pos,66%);}
+  .filet-coupe .fc-d{position:absolute;top:0;left:var(--pos,66%);width:64px;height:5px;}
+  .filet-coupe .fc-r{position:absolute;top:0;height:1px;background:currentColor;left:calc(var(--pos,66%) + 64px);right:0;}
+  .rule{height:1px;background:var(--line);}
+  .eyebrow{font-family:'Archivo',sans-serif;font-weight:600;font-size:11px;line-height:1;letter-spacing:.1em;
+           text-transform:uppercase;color:var(--muted);}
+
+  /* ---------- Bloc erreur ---------- */
+  .err{padding:120px 0 84px;text-align:center;}
+  .err__code{font-family:'Archivo',sans-serif;font-weight:800;font-size:160px;line-height:.86;
+             letter-spacing:-.03em;color:var(--line);font-variant-numeric:tabular-nums;}
+  .err__msg{margin:28px auto 0;max-width:40ch;font-family:'Archivo',sans-serif;font-weight:600;font-size:27px;
+            line-height:1.3;letter-spacing:-.01em;color:var(--ink);text-wrap:balance;}
+  .err__action{margin-top:26px;}
+  .err__action a{font-weight:600;font-size:17px;color:var(--accent);text-decoration:underline;
+                 text-decoration-thickness:1px;text-underline-offset:4px;}
+
+  .section-head{display:flex;align-items:baseline;justify-content:space-between;gap:24px;}
+  .section-title{margin:0;font-family:'Archivo',sans-serif;font-weight:700;font-size:28px;
+                 letter-spacing:-.02em;line-height:1.05;color:var(--ink);}
+  .voir-tout{font-weight:500;font-size:14px;color:var(--muted);flex:0 0 auto;}
+  .voir-tout:hover{color:var(--ink);text-decoration:none;}
+
+  .card{display:block;color:inherit;}
+  .card__media{position:relative;overflow:hidden;aspect-ratio:16/9;background:var(--surface);}
+  .card__media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform 150ms ease;}
+  .card:hover .card__media img{transform:scale(1.03);}
+  .card__body{padding-top:16px;}
+  .card__title{margin:8px 0 0;font-family:'Archivo',sans-serif;font-weight:600;font-size:20px;
+               letter-spacing:-.02em;line-height:1.25;color:var(--ink);
+               display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+  .card:hover .card__title{text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+  .card__meta{margin-top:12px;font-size:13px;color:var(--muted);}
+  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:36px 24px;margin-top:32px;}
+
+  /* ---------- Pied de page (compact) ---------- */
+  .foot{padding:52px 0 40px;}
+  .foot__brand img{width:300px;margin-left:-8px;}
+  .foot__tag{font-size:16px;color:var(--muted);margin-top:4px;}
+  .foot__legal{display:flex;justify-content:space-between;gap:24px;margin-top:24px;padding-top:20px;
+               border-top:1px solid var(--line);font-size:13px;color:var(--muted);}
+
+  /* ---------- Squelette (chargement) ---------- */
+  @keyframes fmpulse{0%,100%{opacity:1;}50%{opacity:.42;}}
+  .skeleton{animation:fmpulse 1.8s ease-in-out infinite;}
+  .sk{background:var(--surface);}
+  .sk-media{aspect-ratio:16/9;}
+  .une-grid{display:grid;grid-template-columns:7fr 5fr;gap:40px;margin-top:28px;align-items:start;}
+  .sk-secondary{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+  .grid-rubrique{display:grid;grid-template-columns:repeat(4,1fr);gap:40px 24px;}
+  .grid-rubrique .span-2{grid-column:span 2;}
+</style>
+</head>
+
+<body>
+<div class="states">
+
+  <!-- ======================= 01 · 404 ======================= -->
+  <section class="state">
+    <div class="state__caption">
+      <div class="state__eyebrow">01 · Page introuvable</div>
+      <h2 class="state__name">404</h2>
+      <p class="state__note">Header et pied de page normaux. Le chiffre en filigrane (couleur « filet »), une phrase en ink qui dit ce qui s'est passé, puis les derniers articles : une 404 ramène vers du contenu.</p>
+    </div>
+
+    <div class="frame">
+      <aside class="rail">
+        <div>
+          <img class="rail__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre — accueil">
+          <img class="rail__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre — accueil">
+          <div class="rail__search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg><span>Rechercher</span></div>
+          <nav class="nav">
+            <a href="rubrique.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13C4 8 8 4 20 4c0 12-4 16-9 16Z"></path><path d="M8.5 16.5C10 13 13 10 17 8.5"></path></svg><span>Environnement</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0Z"></path><path d="M8 6H5v1a3 3 0 0 0 3 3"></path><path d="M16 6h3v1a3 3 0 0 1-3 3"></path><path d="M9 20h6"></path><path d="M12 13v4"></path></svg><span>Sport</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5 12 5l10 3.5-10 3.5Z"></path><path d="M6 10.5V15c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5"></path></svg><span>Éducation</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"></path></svg><span>Santé</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17"></path><path d="M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"></path></svg><span>Diplomatie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5.3 7.5 4.7 5 4.7v13c2.5 0 5 .6 7 1.8 2-1.2 4.5-1.8 7-1.8v-13c-2.5 0-5 .6-7 1.8Z"></path><path d="M12 6.5v13"></path></svg><span>Culture</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="9" height="9" rx="1"></rect><path d="M10 3.5v2M14 3.5v2M10 18.5v2M14 18.5v2M3.5 10h2M3.5 14h2M18.5 10h2M18.5 14h2"></path></svg><span>Technologie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L21 6"></path><path d="M15.5 6H21v5.5"></path></svg><span>Économie</span></a>
+          </nav>
+        </div>
+        <div class="rail__toggle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path></svg><span>Passer en sombre</span></div>
+      </aside>
+
+      <main style="flex:1 1 auto;min-width:0;">
+        <div class="content">
+          <section class="err">
+            <div class="err__code">404</div>
+            <p class="err__msg">Cette page n'existe pas ou a été dépubliée.</p>
+          </section>
+        </div>
+        <div class="content"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+        <div class="content">
+          <section style="padding:56px 0 64px;">
+            <div class="section-head"><h2 class="section-title">Les derniers articles</h2><a class="voir-tout" href="accueil.html">Tout voir</a></div>
+            <div class="grid-4">
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d1/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Technologie</p><h3 class="card__title">Souveraineté numérique : un cloud public européen entre en service</h3><div class="card__meta">14 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d2/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Culture</p><h3 class="card__title">Le Festival d'Avignon ouvre sous le signe de la jeunesse</h3><div class="card__meta">14 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d3/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Éducation</p><h3 class="card__title">Réforme du lycée : ce qui change à la rentrée pour les élèves de seconde</h3><div class="card__meta">13 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d4/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Sport</p><h3 class="card__title">Handball : les Bleues qualifiées pour la finale</h3><div class="card__meta">13 juillet 2026</div></div></a>
+            </div>
+          </section>
+        </div>
+        <div class="content"><div class="filet-coupe" style="--pos:50%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+        <footer class="content">
+          <div class="foot">
+            <div class="foot__brand"><img class="wm-noir" src="../assets/wordmark-bloc-noir.png" alt="Francomètre"><img class="wm-blanc" src="../assets/wordmark-bloc-blanc.png" alt="Francomètre"><div class="foot__tag">L'actualité, mesurée.</div></div>
+            <div class="foot__legal"><span>© 2026 Francomètre — francometre.com</span><span>Édité à Paris</span></div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <!-- ======================= 02 · 500 ======================= -->
+  <section class="state">
+    <div class="state__caption">
+      <div class="state__eyebrow">02 · Erreur serveur</div>
+      <h2 class="state__name">500</h2>
+      <p class="state__note">Même gabarit que la 404. Le message dit ce qui se passe et ce que la personne peut faire ensuite ; le lien « Réessayer » est le seul usage d'accent de la page.</p>
+    </div>
+
+    <div class="frame">
+      <aside class="rail">
+        <div>
+          <img class="rail__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre — accueil">
+          <img class="rail__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre — accueil">
+          <div class="rail__search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg><span>Rechercher</span></div>
+          <nav class="nav">
+            <a href="rubrique.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13C4 8 8 4 20 4c0 12-4 16-9 16Z"></path><path d="M8.5 16.5C10 13 13 10 17 8.5"></path></svg><span>Environnement</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0Z"></path><path d="M8 6H5v1a3 3 0 0 0 3 3"></path><path d="M16 6h3v1a3 3 0 0 1-3 3"></path><path d="M9 20h6"></path><path d="M12 13v4"></path></svg><span>Sport</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5 12 5l10 3.5-10 3.5Z"></path><path d="M6 10.5V15c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5"></path></svg><span>Éducation</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"></path></svg><span>Santé</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17"></path><path d="M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"></path></svg><span>Diplomatie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5.3 7.5 4.7 5 4.7v13c2.5 0 5 .6 7 1.8 2-1.2 4.5-1.8 7-1.8v-13c-2.5 0-5 .6-7 1.8Z"></path><path d="M12 6.5v13"></path></svg><span>Culture</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="9" height="9" rx="1"></rect><path d="M10 3.5v2M14 3.5v2M10 18.5v2M14 18.5v2M3.5 10h2M3.5 14h2M18.5 10h2M18.5 14h2"></path></svg><span>Technologie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L21 6"></path><path d="M15.5 6H21v5.5"></path></svg><span>Économie</span></a>
+          </nav>
+        </div>
+        <div class="rail__toggle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path></svg><span>Passer en sombre</span></div>
+      </aside>
+
+      <main style="flex:1 1 auto;min-width:0;">
+        <div class="content">
+          <section class="err">
+            <div class="err__code">500</div>
+            <p class="err__msg">Le service est temporairement indisponible. Réessayez dans quelques instants.</p>
+            <div class="err__action"><a href="#">Réessayer</a></div>
+          </section>
+        </div>
+        <div class="content"><div class="filet-coupe" style="--pos:66%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+        <div class="content">
+          <section style="padding:56px 0 64px;">
+            <div class="section-head"><h2 class="section-title">Les derniers articles</h2><a class="voir-tout" href="accueil.html">Tout voir</a></div>
+            <div class="grid-4">
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d1/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Technologie</p><h3 class="card__title">Souveraineté numérique : un cloud public européen entre en service</h3><div class="card__meta">14 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d2/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Culture</p><h3 class="card__title">Le Festival d'Avignon ouvre sous le signe de la jeunesse</h3><div class="card__meta">14 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d3/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Éducation</p><h3 class="card__title">Réforme du lycée : ce qui change à la rentrée pour les élèves de seconde</h3><div class="card__meta">13 juillet 2026</div></div></a>
+              <a class="card" href="article.html"><div class="card__media"><img src="https://picsum.photos/seed/fm-d4/800/450" alt=""></div><div class="card__body"><p class="eyebrow" style="margin:0;">Sport</p><h3 class="card__title">Handball : les Bleues qualifiées pour la finale</h3><div class="card__meta">13 juillet 2026</div></div></a>
+            </div>
+          </section>
+        </div>
+        <div class="content"><div class="filet-coupe" style="--pos:50%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+        <footer class="content">
+          <div class="foot">
+            <div class="foot__brand"><img class="wm-noir" src="../assets/wordmark-bloc-noir.png" alt="Francomètre"><img class="wm-blanc" src="../assets/wordmark-bloc-blanc.png" alt="Francomètre"><div class="foot__tag">L'actualité, mesurée.</div></div>
+            <div class="foot__legal"><span>© 2026 Francomètre — francometre.com</span><span>Édité à Paris</span></div>
+          </div>
+        </footer>
+      </main>
+    </div>
+  </section>
+
+  <!-- ======================= 03 · Squelette — Accueil ======================= -->
+  <section class="state">
+    <div class="state__caption">
+      <div class="state__eyebrow">03 · Chargement — Accueil</div>
+      <h2 class="state__name">Squelette</h2>
+      <p class="state__note">Blocs en couleur « surface » aux dimensions exactes des cards définitives — même ratio 16:9, mêmes hauteurs de titre. Pulsation lente d'opacité, aucun balayage brillant.</p>
+    </div>
+
+    <div class="frame">
+      <aside class="rail">
+        <div>
+          <img class="rail__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre — accueil">
+          <img class="rail__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre — accueil">
+          <div class="rail__search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg><span>Rechercher</span></div>
+          <nav class="nav">
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13C4 8 8 4 20 4c0 12-4 16-9 16Z"></path><path d="M8.5 16.5C10 13 13 10 17 8.5"></path></svg><span>Environnement</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0Z"></path><path d="M8 6H5v1a3 3 0 0 0 3 3"></path><path d="M16 6h3v1a3 3 0 0 1-3 3"></path><path d="M9 20h6"></path><path d="M12 13v4"></path></svg><span>Sport</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5 12 5l10 3.5-10 3.5Z"></path><path d="M6 10.5V15c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5"></path></svg><span>Éducation</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"></path></svg><span>Santé</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17"></path><path d="M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"></path></svg><span>Diplomatie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5.3 7.5 4.7 5 4.7v13c2.5 0 5 .6 7 1.8 2-1.2 4.5-1.8 7-1.8v-13c-2.5 0-5 .6-7 1.8Z"></path><path d="M12 6.5v13"></path></svg><span>Culture</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="9" height="9" rx="1"></rect><path d="M10 3.5v2M14 3.5v2M10 18.5v2M14 18.5v2M3.5 10h2M3.5 14h2M18.5 10h2M18.5 14h2"></path></svg><span>Technologie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L21 6"></path><path d="M15.5 6H21v5.5"></path></svg><span>Économie</span></a>
+          </nav>
+        </div>
+        <div class="rail__toggle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path></svg><span>Passer en sombre</span></div>
+      </aside>
+
+      <main class="skeleton" style="flex:1 1 auto;min-width:0;">
+        <div class="content">
+          <section style="padding:56px 0 64px;">
+            <div class="sk" style="height:11px;width:92px;"></div>
+            <div class="une-grid">
+              <div>
+                <div class="sk sk-media"></div>
+                <div class="sk" style="height:44px;width:52px;margin-top:22px;"></div>
+                <div class="sk" style="height:42px;width:96%;margin-top:12px;"></div>
+                <div class="sk" style="height:42px;width:72%;margin-top:12px;"></div>
+                <div class="sk" style="height:14px;width:44%;margin-top:20px;"></div>
+              </div>
+              <div class="sk-secondary">
+                <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+                <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+                <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+                <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="content"><div class="filet-coupe" style="--pos:50%" aria-hidden="true"><span class="fc-l"></span><span class="fc-d"><svg width="64" height="5" viewBox="0 0 64 5" style="overflow:visible;"><line x1="0" y1="4.5" x2="64" y2="0.5" stroke="currentColor" stroke-width="1"></line></svg></span><span class="fc-r"></span></div></div>
+        <div class="content">
+          <section style="padding:64px 0;">
+            <div class="sk" style="height:24px;width:230px;"></div>
+            <div class="grid-4">
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <!-- ======================= 04 · Squelette — Rubrique ======================= -->
+  <section class="state">
+    <div class="state__caption">
+      <div class="state__eyebrow">04 · Chargement — Rubrique</div>
+      <h2 class="state__name">Squelette</h2>
+      <p class="state__note">Le gabarit rubrique en chargement : titre, card en vedette sur deux colonnes, puis la grille. Mêmes dimensions que la page définitive.</p>
+    </div>
+
+    <div class="frame">
+      <aside class="rail">
+        <div>
+          <img class="rail__logo wm-noir" src="../assets/wordmark-noir.png" alt="Francomètre — accueil">
+          <img class="rail__logo wm-blanc" src="../assets/wordmark-blanc.png" alt="Francomètre — accueil">
+          <div class="rail__search"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"></circle><line x1="16.5" y1="16.5" x2="21" y2="21"></line></svg><span>Rechercher</span></div>
+          <nav class="nav">
+            <a href="rubrique.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M11 20A7 7 0 0 1 4 13C4 8 8 4 20 4c0 12-4 16-9 16Z"></path><path d="M8.5 16.5C10 13 13 10 17 8.5"></path></svg><span>Environnement</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h8v5a4 4 0 0 1-8 0Z"></path><path d="M8 6H5v1a3 3 0 0 0 3 3"></path><path d="M16 6h3v1a3 3 0 0 1-3 3"></path><path d="M9 20h6"></path><path d="M12 13v4"></path></svg><span>Sport</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8.5 12 5l10 3.5-10 3.5Z"></path><path d="M6 10.5V15c0 1.4 2.7 2.5 6 2.5s6-1.1 6-2.5v-4.5"></path></svg><span>Éducation</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"></path></svg><span>Santé</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"></circle><path d="M3.5 12h17"></path><path d="M12 3.5c2.5 2.4 2.5 14.6 0 17M12 3.5c-2.5 2.4-2.5 14.6 0 17"></path></svg><span>Diplomatie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.5C10 5.3 7.5 4.7 5 4.7v13c2.5 0 5 .6 7 1.8 2-1.2 4.5-1.8 7-1.8v-13c-2.5 0-5 .6-7 1.8Z"></path><path d="M12 6.5v13"></path></svg><span>Culture</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7.5" y="7.5" width="9" height="9" rx="1"></rect><path d="M10 3.5v2M14 3.5v2M10 18.5v2M14 18.5v2M3.5 10h2M3.5 14h2M18.5 10h2M18.5 14h2"></path></svg><span>Technologie</span></a>
+            <a href="#"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 16.5 9 11l3.5 3.5L21 6"></path><path d="M15.5 6H21v5.5"></path></svg><span>Économie</span></a>
+          </nav>
+        </div>
+        <div class="rail__toggle"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 3a9 9 0 0 1 0 18Z" fill="currentColor" stroke="none"></path></svg><span>Passer en sombre</span></div>
+      </aside>
+
+      <main class="skeleton" style="flex:1 1 auto;min-width:0;">
+        <div class="content">
+          <section style="padding:56px 0 0;">
+            <div class="sk" style="height:11px;width:80px;"></div>
+            <div class="sk" style="height:64px;width:440px;margin-top:18px;"></div>
+            <div class="rule" style="margin-top:28px;"></div>
+          </section>
+        </div>
+        <div class="content">
+          <section style="padding:44px 0 64px;">
+            <div class="grid-rubrique">
+              <div class="span-2">
+                <div class="sk sk-media"></div>
+                <div class="sk" style="height:26px;width:88%;margin-top:20px;"></div>
+                <div class="sk" style="height:26px;width:60%;margin-top:10px;"></div>
+                <div class="sk" style="height:12px;width:30%;margin-top:18px;"></div>
+              </div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+              <div><div class="sk sk-media"></div><div class="sk" style="height:15px;width:90%;margin-top:16px;"></div><div class="sk" style="height:15px;width:62%;margin-top:8px;"></div><div class="sk" style="height:12px;width:38%;margin-top:16px;"></div></div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
