@@ -1,0 +1,37 @@
+{
+  "name": "francometre",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22.12.0 || ^24.11.0 || >=26.0.0"
+  },
+  "description": "Francomètre — L'actualité, mesurée.",
+  "scripts": {
+    "dev": "nuxt dev",
+    "build": "nuxt build",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare",
+    "typecheck": "nuxt typecheck",
+    "verifier": "node scripts/verifier.mjs",
+    "test:e2e": "playwright test"
+  },
+  "dependencies": {
+    "@nuxt/fonts": "0.14.0",
+    "@nuxt/icon": "2.3.1",
+    "@nuxt/image": "2.0.0",
+    "@nuxtjs/color-mode": "4.0.1",
+    "@tailwindcss/vite": "4.3.3",
+    "nuxt": "4.4.8",
+    "tailwindcss": "4.3.3",
+    "vue": "^3.5.0",
+    "vue-router": "^4.5.0"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "4.12.1",
+    "@playwright/test": "1.61.1",
+    "nitropack": "2.13.4",
+    "typescript": "^5.9.0",
+    "vue-tsc": "^3.0.0"
+  }
+}
