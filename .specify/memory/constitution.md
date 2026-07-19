@@ -1,4 +1,53 @@
 <!--
+RAPPORT DE SYNCHRONISATION — v1.2.0
+===================================
+Version : 1.1.0 → 1.2.0
+Date : 2026-07-19
+Nature du changement : MINOR — portée matériellement précisée. Aucun principe ajouté,
+retiré ni redéfini. Un arbitrage en attente est refermé par amendement, comme la
+Gouvernance l'exige.
+
+Arbitrage refermé, tranché par le porteur du projet le 2026-07-19 et mis en œuvre par la
+feature Modèle et données (specs/002-modele-et-donnees) :
+
+  1. Eyebrow = rubrique ou sous-thème ? → LES DEUX, selon le contexte de lecture.
+     L'article gagne un champ sous-thème facultatif. Les 17 eyebrows de rubrique.html
+     portant des libellés hors des huit rubriques (Forêts, Énergie, Biodiversité, Eau,
+     Climat, Littoral, Territoires, Montagne, Mobilité, Déchets, Faune) sont donc
+     valides en l'état et ne se corrigent pas. Consigné aux « Contraintes de
+     conception ».
+
+Reste ouvert : l'arbitrage 2 (la Card dans le back-office), à trancher à la
+spécification du back-office, échéance inchangée.
+
+Section d'accueil de la règle : le porteur du projet a désigné une section « Qualité et
+cohérence », qui n'existe pas dans ce document. La règle a été placée aux « Contraintes
+de conception », qui héberge déjà les huit rubriques et l'arbitrage refermé. Aucune
+section nouvelle n'a été créée.
+
+Portée volontairement limitée : les bornes de longueur (titre 160 / chapô 300 /
+sous-thème 40), l'éviction du rang de Une et le cycle de la date de parution restent
+dans specs/002-modele-et-donnees/spec.md. Ce sont des règles de gestion, pas des
+principes ; la constitution est injectée dans chaque commande et doit rester courte.
+
+Aucune porte de qualité n'a été ajoutée pour cette règle, conformément à la consigne
+« n'ajoute rien d'autre ». Conséquence assumée : la règle d'eyebrow n'est pas contrôlée
+par le tableau des portes ; elle se vérifie par les tests de la feature 002 (SC-005).
+
+Modèles synchronisés :
+  ✅ .specify/templates/plan-template.md — référence de version corrigée (v1.0.0 →
+     v1.2.0) ; les treize portes dérivent de principes que cet amendement ne touche pas.
+  ✅ .specify/templates/spec-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/tasks-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/checklist-template.md — relu, aucun changement requis.
+  ✅ .claude/skills/speckit-*/SKILL.md — relus, aucune référence au sous-thème à mettre
+     à jour, aucune référence propre à un autre agent.
+
+Note de cohérence hors de ce fichier : CLAUDE.md décrit déjà la règle d'eyebrow
+contextuel de manière identique ; aucune divergence à corriger.
+
+---
+
 RAPPORT DE SYNCHRONISATION — v1.1.0
 ===================================
 Version : 1.0.0 → 1.1.0
@@ -267,6 +316,13 @@ Six défauts relevés dans les maquettes, à corriger systématiquement :
 **Les huit rubriques**, dans cet ordre invariable dans le rail : Environnement · Sport ·
 Éducation · Santé · Diplomatie · Culture · Technologie · Économie.
 
+**Rubrique, sous-thème et eyebrow** (amendement v1.2.0, arbitrage 1 refermé) : un article
+porte une **rubrique unique** et un **sous-thème facultatif**. L'eyebrow d'une vignette est
+**contextuel** : le **sous-thème** lorsque le lecteur est déjà dans la rubrique de
+l'article, la **rubrique** partout ailleurs, la **rubrique** en l'absence de sous-thème. Le
+titre est stocké **sans préfixe** : la composition « Sous-thème : Titre » relève de
+l'affichage, jamais du contenu.
+
 **Écrans couverts par une maquette** : accueil, rubrique, article, connexion, états
 (404/500/squelettes), back-office articles, back-office composer la une, back-office éditeur,
 guide de style. Tout autre écran — Médias, résultats de recherche, mot de passe oublié, page
@@ -275,18 +331,14 @@ clause de consultation du principe III si l'accent y paraît nécessaire.
 
 ### Arbitrages en attente
 
-Deux points restent ouverts. Ils ne bloquent aucune feature, mais **doivent être tranchés
-par le porteur du projet** au moment indiqué, et non par défaut au fil du code.
+Un point reste ouvert. Il ne bloque aucune feature, mais **doit être tranché par le porteur
+du projet** au moment indiqué, et non par défaut au fil du code.
 
 *Les arbitrages 3 (frontière des filets) et 4 (mot-symbole) ont été refermés par
-l'amendement v1.1.0 ; les règles retenues sont consignées au principe I.*
+l'amendement v1.1.0 ; les règles retenues sont consignées au principe I. L'arbitrage 1
+(eyebrow = rubrique ou sous-thème ?) a été refermé par l'amendement v1.2.0 ; la règle
+retenue est consignée ci-dessus, aux « Contraintes de conception ».*
 
-1. **Eyebrow = rubrique ou sous-thème ?** `tokens.md` §5 pose « eyebrow = rubrique » sans
-   nuance, mais `rubrique.html` et « À lire aussi » affichent 17 eyebrows portant 11 libellés
-   hors des huit rubriques (Forêts, Énergie, Biodiversité, Eau, Climat, Littoral, Territoires,
-   Montagne, Mobilité, Déchets, Faune). Aucun écran de back-office ne permet de saisir un
-   sous-thème. → **À trancher avant le modèle de données** : soit la Card gagne un second
-   champ optionnel, soit les eyebrows de `rubrique.html` sont corrigés.
 2. **La Card dans le back-office.** Le back-office n'emploie pas la Card mais trois dérivés
    en pixels fixes et non documentés (`.slot`, `.pub`, `.thumb`), ce que le principe I
    qualifie de divergence. → **À trancher à la spécification du back-office** : variantes
@@ -341,4 +393,4 @@ phase 0 puis réévalué après la phase 1 de chaque plan. Les portes de qualit�
 avant clôture de chaque feature. Un écart non déclaré est un défaut, au même titre qu'une
 régression.
 
-**Version**: 1.1.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-18
+**Version**: 1.2.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-19
