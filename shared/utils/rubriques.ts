@@ -37,14 +37,6 @@ export function libelleRubrique(id: string | null | undefined): string | null {
   return RUBRIQUES.find((r) => r.id === id)?.libelle ?? null
 }
 
-/**
- * Une page déclare la rubrique qu'elle occupe par
- * `definePageMeta({ rubrique: 'culture' })`. La mise en page la lit et la
- * transmet à la colonne, au menu de petit écran et au pied de page — la page
- * n'a rien d'autre à câbler (FR-010).
- */
-declare module 'vue-router' {
-  interface RouteMeta {
-    rubrique?: RubriqueId
-  }
-}
+// L'augmentation de `RouteMeta` qui accompagnait ce fichier est restée côté
+// application, dans `app/types/route-meta.d.ts` : `vue-router` n'a rien à faire
+// côté serveur, et ce fichier sert désormais les deux côtés (research.md D5).

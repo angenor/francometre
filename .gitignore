@@ -13,6 +13,12 @@ build/
 .cache/
 .vite/
 
+# Prisma — le client généré ne rentre jamais dans Git (research.md D2),
+# la base locale non plus.
+prisma/generated/
+prisma/*.db
+prisma/*.db-journal
+
 # Playwright
 test-results/
 playwright-report/

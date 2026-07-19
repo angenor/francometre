@@ -1,0 +1,94 @@
+import { z } from 'zod'
+
+// Validation des entrées d'écriture d'article (FR-026).
+//
+// Le principe VI interdit les `enum` portés par la base, ce qui déplace
+// mécaniquement la contrainte vers le code : rien, au niveau de SQLite,
+// n'empêche d'écrire `'brouyon'` dans `statut`. C'est Zod qui l'empêche, et
+// c'est pourquoi la validation précède TOUT enregistrement (research.md D13).
+//
+// Chaque règle porte un message en français : le message par défaut de la
+// bibliothèque est en anglais (« Too big: expected string… ») et manquerait la
+// porte « Langue » de la constitution.
+//
+// Aucune règle ne tronque ni ne corrige en silence. Un dépassement est un REFUS
+// explicite (FR-008a) : tronquer un titre à 160 caractères reviendrait à
+// publier un texte que personne n'a écrit.
+
+/** Les deux seuls statuts. Chaîne validée, jamais un enum de base (FR-010). */
+export const STATUTS = ['brouillon', 'publie'] as const
+export type Statut = (typeof STATUTS)[number]
+
+export const RANG_UNE_MIN = 1
+export const RANG_UNE_MAX = 5
+
+const titre = z
+  .string({ error: 'Le titre est obligatoire.' })
+  .trim()
+  .min(1, { error: 'Le titre ne peut pas être vide.' })
+  .max(160, { error: 'Le titre ne peut pas dépasser 160 caractères.' })
+
+const chapo = z
+  .string({ error: 'Le chapô est obligatoire.' })
+  .trim()
+  .min(1, { error: 'Le chapô ne peut pas être vide.' })
+  .max(300, { error: 'Le chapô ne peut pas dépasser 300 caractères.' })
+
+const corps = z.string({ error: 'Le corps est obligatoire.' })
+
+const sousTheme = z
+  .string()
+  .trim()
+  .max(40, { error: 'Le sous-thème ne peut pas dépasser 40 caractères.' })
+
+const statut = z.enum(STATUTS, {
+  error: 'Le statut doit valoir « brouillon » ou « publie ».',
+})
+
+const rubriqueId = z
+  .string({ error: 'La rubrique est obligatoire.' })
+  .min(1, { error: 'La rubrique est obligatoire.' })
+
+/**
+ * Le rang de Une. L'intervalle 1–5 relève de Zod et de lui seul : aucune
+ * contrainte de base ne l'exprime, et la contrainte d'unicité qui existe
+ * empêche les doublons sans rien dire de l'intervalle (research.md D6).
+ */
+export const rangUne = z
+  .number({ error: 'Le rang de Une doit être un nombre.' })
+  .int({ error: 'Le rang de Une doit être un entier.' })
+  .min(RANG_UNE_MIN, { error: 'Le rang de Une doit être compris entre 1 et 5.' })
+  .max(RANG_UNE_MAX, { error: 'Le rang de Une doit être compris entre 1 et 5.' })
+
+/**
+ * Le slug est facultatif à l'entrée : absent, il se dérive du titre. Fourni, il
+ * doit déjà respecter la forme d'un segment d'URL — on ne le « répare » pas en
+ * silence, sans quoi l'auteur croirait avoir choisi une adresse qu'il n'a pas.
+ */
+const slug = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, {
+    error: 'Le slug ne peut contenir que des minuscules, des chiffres et des tirets.',
+  })
+
+export const schemaCreationArticle = z.object({
+  titre,
+  chapo,
+  corps,
+  rubriqueId,
+  slug: slug.optional(),
+  sousTheme: sousTheme.optional(),
+  auteur: z.string().trim().optional(),
+  statut: statut.optional(),
+  couvertureId: z.string().optional(),
+  couvertureAlt: z.string().optional(),
+})
+
+/**
+ * La modification est partielle, avec les MÊMES garanties que la création :
+ * `.partial()` rend chaque champ facultatif sans relâcher aucune de ses règles.
+ */
+export const schemaModificationArticle = schemaCreationArticle.partial()
+
+export type DonneesCreationArticle = z.infer<typeof schemaCreationArticle>
+export type DonneesModificationArticle = z.infer<typeof schemaModificationArticle>

@@ -10,6 +10,14 @@
 //      grâce aux sélecteurs de portée `.theme-clair` / `.theme-sombre` et à des
 //      libellés lus à l'exécution, pas grâce à une dérogation.
 //   3. Aucun retour à Tailwind v3 : ni `tailwind.config.js`, ni `@nuxtjs/tailwindcss`.
+//
+// Trois contrôles de PORTABILITÉ s'y ajoutent depuis « Modèle et données » :
+//   4. Aucune URL dans les colonnes de médias (porte 9, SC-006).
+//   5. Aucun import de `node:fs` hors de l'interface Storage (porte 9).
+//      C'est le plus utile des deux : le premier constate un symptôme,
+//      celui-ci empêche la cause.
+//   6. Schéma portable : ni `enum`, ni `Json`, ni `autoincrement`, ni `@db.`
+//      (porte 10).
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -96,6 +104,112 @@ if ('@nuxtjs/tailwindcss' in dependances) {
 }
 controle('Aucun retour à Tailwind v3', retoursV3, 'research.md D1.')
 
+// ============================================================================
+// Contrôles de portabilité — feature « Modèle et données »
+//
+// L'objectif du principe VI est de migrer SQLite → PostgreSQL et disque → S3
+// SANS toucher au code métier. Il se tient à tout moment, pas le jour de la
+// migration : d'où des contrôles, et non des conventions.
+// ============================================================================
+
+const MOTIF_URL = /https?:\/\/|(^|["'\s(=])\/\/|data:/
+
+// ------------------------------------------------- 4. Aucune URL dans la base
+//
+// SC-006. Le contrôle porte sur les DONNÉES : il ouvre la base si elle existe.
+// Une base absente n'est pas un échec — le dépôt se clone sans elle.
+const urlsEnBase = []
+const CHEMIN_BASE = join(RACINE, 'prisma', 'dev.db')
+
+if (existsSync(CHEMIN_BASE)) {
+  const { default: Database } = await import('better-sqlite3')
+  const base = new Database(CHEMIN_BASE, { readonly: true })
+
+  const tableExiste = base
+    .prepare(`SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'Media'`)
+    .get()
+
+  if (tableExiste) {
+    for (const media of base.prepare('SELECT id, cle, altParDefaut FROM Media').all()) {
+      for (const colonne of ['cle', 'altParDefaut']) {
+        const valeur = media[colonne]
+        if (typeof valeur === 'string' && MOTIF_URL.test(valeur)) {
+          urlsEnBase.push(`Media[${media.id}].${colonne} : ${valeur}`)
+        }
+      }
+    }
+  }
+  base.close()
+}
+
+controle(
+  'Aucune URL dans les colonnes de médias',
+  urlsEnBase,
+  'porte 9 : la base ne range que des clés ; l\'adresse se calcule par Stockage.url().',
+)
+
+// ------------------------------ 5. Aucun accès disque hors interface Stockage
+//
+// Le plus utile des deux contrôles de la porte 9 : il empêche la cause plutôt
+// que de constater le symptôme.
+const STOCKAGE = join(RACINE, 'server', 'utils', 'stockage.ts')
+const MOTIF_FS = /from\s+['"]node:fs['"]|from\s+['"]fs['"]|require\(['"](node:)?fs['"]\)/
+
+/** Les sources applicatives : `app/`, `server/`, `shared/`. Ni tests, ni scripts. */
+function sourcesApplicatives() {
+  return ['app', 'server', 'shared'].flatMap((dossier) => fichiers(join(RACINE, dossier)))
+}
+
+controle(
+  'Aucun import de node:fs hors de server/utils/stockage.ts',
+  sourcesApplicatives()
+    .filter((f) => f !== STOCKAGE)
+    .flatMap((f) => releve(f, MOTIF_FS)),
+  'porte 9 : l\'interface Stockage est la seule porte vers le disque.',
+)
+
+// -------------------------------------------------------- 6. Schéma portable
+//
+// Porte 10. Ce que la base ne contraint plus, le code le contraint — mais
+// encore faut-il que le schéma n'ait pas réintroduit ce qui ne migre pas.
+const CHEMIN_SCHEMA = join(RACINE, 'prisma', 'schema.prisma')
+const nonPortable = []
+
+if (existsSync(CHEMIN_SCHEMA)) {
+  const lignes = readFileSync(CHEMIN_SCHEMA, 'utf8').split('\n')
+
+  const INTERDITS = [
+    [/^\s*enum\s+\w+\s*\{/, 'enum porté par la base'],
+    // `\b` et non `\s` en fin : un champ `Json` sans attribut termine la ligne.
+    [/^\s*\w+\s+Json(\?|\[\])?\s*(\/\/.*)?$|^\s*\w+\s+Json(\?|\[\])?\s+@/, 'type Json'],
+    [/@default\(autoincrement\(\)\)/, 'identifiant auto-incrémenté'],
+    [/@db\.\w+/, 'attribut natif @db.'],
+    // Une liste SCALAIRE (`String[]`), qui n'existe pas en SQLite — et non un
+    // tableau de relation (`Article[]`), qui est portable et attendu.
+    [
+      /^\s*\w+\s+(String|Boolean|Int|BigInt|Float|Decimal|DateTime|Bytes|Json)\[\]/,
+      'liste scalaire',
+    ],
+  ]
+
+  lignes.forEach((ligne, index) => {
+    // Les commentaires citent ces mots pour expliquer pourquoi ils sont exclus.
+    if (/^\s*(\/\/|\/\/\/)/.test(ligne)) return
+
+    for (const [motif, intitule] of INTERDITS) {
+      if (motif.test(ligne)) {
+        nonPortable.push(`prisma/schema.prisma:${index + 1}: ${intitule} — ${ligne.trim()}`)
+      }
+    }
+  })
+}
+
+controle(
+  'Schéma portable SQLite → PostgreSQL',
+  nonPortable,
+  'porte 10 : ni enum de base, ni Json, ni liste scalaire, ni auto-increment, ni @db.',
+)
+
 // ------------------------------------------------------------------- Verdict
 if (echecs.length > 0) {
   console.log(`\n${echecs.length} contrôle(s) en échec :`)
@@ -103,4 +217,4 @@ if (echecs.length > 0) {
   console.log('')
   process.exit(1)
 }
-console.log('\nLes trois contrôles passent.\n')
+console.log('\nLes six contrôles passent.\n')

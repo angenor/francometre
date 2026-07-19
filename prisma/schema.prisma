@@ -1,0 +1,123 @@
+// Francomètre — schéma de données.
+//
+// Cinq modèles. Le principe VI de la constitution vise un objectif précis :
+// migrer SQLite → PostgreSQL sans toucher au code métier. Le schéma n'emploie
+// donc QUE ce qui existe à l'identique sur les deux moteurs :
+//
+//   · aucun `enum` porté par la base — les statuts sont des `String` validés par Zod
+//   · aucun type `Json`, aucune liste scalaire
+//   · aucun identifiant auto-incrémenté — des `cuid()` produits par l'application
+//   · aucun attribut natif `@db.`
+//
+// Ce que la base ne contraint plus, la couche `server/services/` le contraint,
+// et elle le contraint là où la migration ne le remettra pas en cause
+// (research.md D13).
+
+generator client {
+  // `prisma-client` et NON `prisma-client-js` : l'ancien nom produit une erreur.
+  // `output` est obligatoire en Prisma 7. La sortie est sous `prisma/` et surtout
+  // pas sous `server/utils/`, que Nitro auto-importe récursivement (research.md D2).
+  provider     = "prisma-client"
+  output       = "../prisma/generated"
+  runtime      = "nodejs"
+  moduleFormat = "esm"
+
+  // Par défaut le client s'importe lui-même en `.js` alors qu'il émet du `.ts`.
+  // Vite s'en accommode, `node --experimental-strip-types` non : il exige le
+  // chemin réel, sans réécriture d'extension. Or c'est ainsi que tourne le seed
+  // (research.md D4). D'où l'extension explicite.
+  importFileExtension = "ts"
+}
+
+// L'URL de connexion n'a plus sa place ici : Prisma 7.8 refuse la propriété
+// `url` dans un bloc `datasource` (erreur P1012). Elle vit dans
+// `prisma.config.ts` pour Migrate, et arrive au client par l'adaptateur.
+// research.md D2 montre encore l'ancienne forme.
+datasource db {
+  provider = "sqlite"
+}
+
+/// Reflet de `shared/utils/rubriques.ts`, jamais son original. La table existe
+/// pour porter les clés étrangères des articles ; elle ne redéfinit rien.
+model Rubrique {
+  /// Repris du fichier source plutôt que généré : c'est déjà un identifiant
+  /// stable, et il sert de segment d'URL (`/rubrique/environnement`).
+  id      String @id
+  libelle String
+  ordre   Int
+
+  articles Article[]
+}
+
+/// L'entité centrale. Un article a UNE rubrique et UN sous-thème facultatif.
+model Article {
+  id     String @id @default(cuid())
+  /// ≤ 160 caractères, stocké SANS préfixe : « Biodiversité : le retour du
+  /// lynx » relève de la composition d'affichage, jamais du contenu (FR-008).
+  titre  String
+  /// Unique par contrainte de base, pas seulement par vérification préalable :
+  /// deux écritures concurrentes ne doivent pas pouvoir passer toutes les deux.
+  slug   String @unique
+  chapo  String
+  /// HTML DÉJÀ assaini au moment de l'écriture (FR-011, porte 11). La base ne
+  /// contient jamais de balisage non filtré.
+  corps  String
+  /// `brouillon` ou `publie`. Chaîne validée par Zod, jamais un enum de base.
+  statut String @default("brouillon")
+
+  /// Nulle tant que l'article n'a jamais été publié. Une colonne NOT NULL
+  /// obligerait à inventer une date pour chaque brouillon — soit une valeur
+  /// fausse dans le seul champ que FR-014a interdit de redater.
+  publieLe DateTime?
+
+  /// Texte libre, sans référentiel : ni normalisé, ni rapproché, ni indexé.
+  /// Deux articles portant la même valeur ne sont liés par rien (FR-007).
+  sousTheme String?
+  /// Signer n'est pas se connecter : attribut textuel, sans relation vers Compte.
+  auteur    String?
+
+  rubriqueId String
+  rubrique   Rubrique @relation(fields: [rubriqueId], references: [id])
+
+  /// Couverture et texte alternatif forment un couple : l'un sans l'autre est
+  /// une erreur. Facultatifs sur un brouillon, EXIGÉS à la publication (FR-014).
+  couvertureId  String?
+  couverture    Media?  @relation(fields: [couvertureId], references: [id], onDelete: Restrict)
+  couvertureAlt String?
+
+  /// 1 à 5, unique ; `null` = hors Une. L'unicité sur colonne nullable a été
+  /// MESURÉE identique sur SQLite 3.51 et PostgreSQL 18.4 (research.md D6).
+  /// L'intervalle 1–5, lui, relève de Zod : aucun CHECK n'est exprimable ici.
+  rangUne Int? @unique
+
+  creeLe    DateTime @default(now())
+  modifieLe DateTime @updatedAt
+
+  @@index([rubriqueId])
+  @@index([statut, publieLe])
+}
+
+/// Une clé de stockage, jamais une URL. L'adresse d'affichage est calculée à la
+/// lecture par `Stockage.url(cle)` — porte 9.
+model Media {
+  id           String   @id @default(cuid())
+  cle          String   @unique
+  largeur      Int
+  hauteur      Int
+  poids        Int
+  /// Proposition reprise à l'usage ; ne dispense pas du `alt` de l'article.
+  altParDefaut String?
+  creeLe       DateTime @default(now())
+
+  articles Article[]
+}
+
+/// Représenté, pas encore employé : l'authentification est hors périmètre
+/// (feature 003). `motDePasseHache` n'est retourné par AUCUNE lecture exposée.
+model Compte {
+  id              String   @id @default(cuid())
+  identifiant     String   @unique
+  motDePasseHache String
+  nomAffichable   String
+  creeLe          DateTime @default(now())
+}
