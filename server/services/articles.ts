@@ -190,9 +190,34 @@ export async function listerArticlesPublics(options: OptionsListe = {}) {
       ...filtreVisible(instant),
       ...(rubriqueId ? { rubriqueId } : {}),
     },
+    // La couverture est jointe pour que la couche de présentation dispose de sa
+    // CLÉ de stockage et en calcule l'URL à la lecture (research D9). Ajout
+    // rétrocompatible : les appelants existants reçoivent un champ en plus. La
+    // base ne range toujours qu'une clé, jamais une URL (porte 9).
+    include: { couverture: true },
     orderBy: { publieLe: 'desc' },
     ...(limite !== undefined ? { take: limite } : {}),
     ...(decalage !== undefined ? { skip: decalage } : {}),
+  })
+}
+
+/**
+ * Compte les articles visibles du public — total de pagination (research D3).
+ *
+ * Emploie EXACTEMENT le même `where` que `listerArticlesPublics` : un total qui
+ * dériverait d'un autre filtre trahirait le découpage des pages (SC-002). C'est
+ * la raison d'être de `filtreVisible`, partagé et jamais recopié.
+ */
+export async function compterArticlesPublics(
+  options: Pick<OptionsListe, 'rubriqueId' | 'instant'> = {},
+): Promise<number> {
+  const { rubriqueId, instant } = options
+
+  return prisma.article.count({
+    where: {
+      ...filtreVisible(instant),
+      ...(rubriqueId ? { rubriqueId } : {}),
+    },
   })
 }
 
@@ -206,6 +231,7 @@ export async function listerArticlesPublics(options: OptionsListe = {}) {
 export async function articlePublicParSlug(slug: string, instant?: Date) {
   return prisma.article.findFirst({
     where: { slug, ...filtreVisible(instant) },
+    include: { couverture: true },
   })
 }
 
@@ -226,6 +252,7 @@ export async function articlePublicParSlug(slug: string, instant?: Date) {
 export async function lireUne(instant?: Date) {
   return prisma.article.findMany({
     where: { rangUne: { not: null }, ...filtreVisible(instant) },
+    include: { couverture: true },
     orderBy: { rangUne: { sort: 'asc', nulls: 'last' } },
   })
 }

@@ -17,8 +17,16 @@
 const props = defineProps<{
   /** Titre de l'article. Tronqué à trois lignes à l'affichage. */
   titre: string
-  /** L'un des huit identifiants de rubrique. Affiché par son LIBELLÉ. */
+  /** L'un des huit identifiants de rubrique. Affiché par son LIBELLÉ à défaut
+   *  d'eyebrow explicite. */
   rubrique: RubriqueId
+  /**
+   * Surtitre CONTEXTUEL, résolu au serveur (`eyebrowDe`) : le sous-thème quand
+   * le lecteur est dans la rubrique de l'article, la rubrique ailleurs. Absent,
+   * la vignette retombe sur le libellé de la rubrique — c'est ce dont la planche
+   * de style et les emplois sans contexte ont besoin. La vignette AFFICHE ce
+   * surtitre, elle ne le calcule pas : le contexte n'est pas son affaire. */
+  eyebrow?: string
   /** Date de publication : objet `Date` ou chaîne ISO. */
   date: Date | string
   /** Destination — la vignette entière y mène. */
@@ -85,8 +93,12 @@ const instant = computed(() => {
   return valeur
 })
 
-/** Le libellé de la rubrique, jamais son identifiant. */
-const libelle = computed(() => libelleRubrique(props.rubrique) ?? '')
+/**
+ * Le surtitre affiché : l'eyebrow contextuel s'il est fourni, sinon le libellé
+ * de la rubrique — jamais l'identifiant. Un eyebrow vide ou fait d'espaces n'en
+ * est pas un et retombe sur la rubrique.
+ */
+const libelle = computed(() => props.eyebrow?.trim() || libelleRubrique(props.rubrique) || '')
 
 /** « 14 juillet 2026 » — en français, en toutes lettres. */
 const dateEnToutesLettres = computed(() => (instant.value ? FORMAT_DATE.format(instant.value) : ''))

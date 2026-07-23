@@ -142,6 +142,29 @@ test.describe('Menu de petit écran', () => {
   })
 })
 
+test.describe('Pages publiques — aucun débordement horizontal', () => {
+  const PAGES = [
+    ['accueil', '/'],
+    ['tous les articles', '/articles'],
+    ['rubrique', '/rubrique/environnement'],
+    ['article', '/article/le-retour-du-lynx-dans-le-jura'],
+    ['rubrique vide', '/rubrique/diplomatie'],
+  ] as const
+
+  for (const [nom, chemin] of PAGES) {
+    for (const theme of ['light', 'dark'] as const) {
+      test(`${nom} ne déborde pas (thème ${theme === 'dark' ? 'sombre' : 'clair'})`, async ({ page }) => {
+        await page.addInitScript((t) => window.localStorage.setItem('francometre-theme', t), theme)
+        await ouvrir(page, chemin)
+
+        const ecart = await debordement(page)
+        expect(ecart.document, 'le document déborde horizontalement').toBeLessThanOrEqual(0)
+        expect(ecart.corps, 'le corps déborde horizontalement').toBeLessThanOrEqual(0)
+      })
+    }
+  }
+})
+
 test.describe('Gouttière', () => {
   test('20 px sous le point de rupture, 24 px au-dessus', async ({ page }) => {
     await ouvrir(page)

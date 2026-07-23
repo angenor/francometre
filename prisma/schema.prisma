@@ -84,6 +84,11 @@ model Article {
   couvertureId  String?
   couverture    Media?  @relation(fields: [couvertureId], references: [id], onDelete: Restrict)
   couvertureAlt String?
+  /// Légende ÉDITORIALE visible sous la couverture (`<figcaption>`), pouvant
+  /// porter un crédit (« — Photo d'illustration »). DISTINCTE de `couvertureAlt`,
+  /// qui est le texte alternatif d'accessibilité : ne jamais confondre les deux
+  /// (principe VIII, research D10). Nullable — texte libre, borné par Zod à la 004.
+  couvertureLegende String?
 
   /// 1 à 5, unique ; `null` = hors Une. L'unicité sur colonne nullable a été
   /// MESURÉE identique sur SQLite 3.51 et PostgreSQL 18.4 (research.md D6).
