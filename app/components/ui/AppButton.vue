@@ -26,8 +26,14 @@ const props = withDefaults(
   defineProps<{
     variante?: Variante
     indisponible?: boolean
+    /**
+     * Type HTML du bouton. Défaut `button` (comportement inchangé, aucun envoi
+     * de formulaire par mégarde) ; `submit` permet à un formulaire — la
+     * connexion — d'être validé à la touche Entrée. Rétrocompatible.
+     */
+    type?: 'button' | 'submit'
   }>(),
-  { variante: 'secondaire', indisponible: false },
+  { variante: 'secondaire', indisponible: false, type: 'button' },
 )
 
 /**
@@ -83,7 +89,7 @@ const classes = computed(() => [
 
 <template>
   <button
-    type="button"
+    :type="type"
     data-testid="bouton"
     :class="classes"
     :disabled="indisponible"

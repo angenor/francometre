@@ -20,11 +20,34 @@
 const props = withDefaults(
   defineProps<{
     type?: 'ligne' | 'multiligne' | 'case'
+    /**
+     * Type HTML de la saisie sur une ligne — `email` / `password` appellent le
+     * bon clavier et la bonne gestion du gestionnaire de mots de passe. Sans
+     * effet sur les natures `multiligne` et `case`. Défaut `text` : les emplois
+     * existants restent identiques (rétrocompatible).
+     */
+    typeHtml?: 'text' | 'email' | 'password'
+    /** Valeur de l'attribut `autocomplete` (p. ex. `email`, `current-password`). */
+    autocomplete?: string
     libelle: string
     erreur?: string | null
+    /**
+     * État d'erreur SANS message par champ : filet rouge et `aria-invalid`, mais
+     * aucun texte sous le champ. Sert là où l'erreur est ANNONCÉE AILLEURS, en un
+     * seul point — la connexion, dont le message unique et indistinct ne désigne
+     * aucun champ (FR-021). `erreur` (message par champ) prime s'il est présent.
+     */
+    enErreur?: boolean
     placeholder?: string
   }>(),
-  { type: 'ligne', erreur: null, placeholder: undefined },
+  {
+    type: 'ligne',
+    typeHtml: 'text',
+    autocomplete: undefined,
+    erreur: null,
+    enErreur: false,
+    placeholder: undefined,
+  },
 )
 
 /** Texte pour les deux saisies, état coché pour la case. */
@@ -61,8 +84,10 @@ const idErreur = `${id}-erreur`
  * Le filet du champ : ordinaire, puis `--ink` au focus ; rouge d'erreur dès
  * qu'un message est présent, focus compris — l'erreur prime sur l'état.
  */
+const enErreur = computed(() => !!props.erreur || props.enErreur)
+
 const filet = computed(() =>
-  props.erreur ? 'border-erreur' : 'border-line focus:border-ink',
+  enErreur.value ? 'border-erreur' : 'border-line focus:border-ink',
 )
 </script>
 
@@ -80,7 +105,7 @@ const filet = computed(() =>
         v-model="coche"
         type="checkbox"
         class="size-4.5 shrink-0 accent-ink"
-        :aria-invalid="erreur ? 'true' : undefined"
+        :aria-invalid="enErreur ? 'true' : undefined"
         :aria-describedby="erreur ? idErreur : undefined"
       >
       <span class="text-label text-ink">{{ libelle }}</span>
@@ -99,7 +124,7 @@ const filet = computed(() =>
         :placeholder="placeholder"
         class="w-full resize-y border-(length:--filet) bg-transparent px-3.5 py-3 font-corps text-saisie leading-corps-serre text-ink transition-colors duration-(--transition-survol) placeholder:text-muted"
         :class="filet"
-        :aria-invalid="erreur ? 'true' : undefined"
+        :aria-invalid="enErreur ? 'true' : undefined"
         :aria-describedby="erreur ? idErreur : undefined"
       />
 
@@ -108,11 +133,12 @@ const filet = computed(() =>
         v-else
         :id="id"
         v-model="texte"
-        type="text"
+        :type="typeHtml"
+        :autocomplete="autocomplete"
         :placeholder="placeholder"
         class="w-full border-b-(length:--filet) bg-transparent py-2.5 font-corps text-saisie text-ink transition-colors duration-(--transition-survol) placeholder:text-muted"
         :class="filet"
-        :aria-invalid="erreur ? 'true' : undefined"
+        :aria-invalid="enErreur ? 'true' : undefined"
         :aria-describedby="erreur ? idErreur : undefined"
       >
     </template>

@@ -117,12 +117,16 @@ model Media {
   articles Article[]
 }
 
-/// Représenté, pas encore employé : l'authentification est hors périmètre
-/// (feature 003). `motDePasseHache` n'est retourné par AUCUNE lecture exposée.
+/// Le compte de rédaction. `motDePasseHache` n'est retourné par AUCUNE lecture
+/// exposée. `identifiant` est stocké NORMALISÉ (trim + minuscule, research D4).
 model Compte {
   id              String   @id @default(cuid())
   identifiant     String   @unique
   motDePasseHache String
   nomAffichable   String
+  /// Rôle du compte. TEXTE validé par Zod (`shared/utils/roles.ts`), jamais un
+  /// enum de base (principe VI). Un seul rôle au MVP ; le champ existe pour ne
+  /// pas re-migrer plus tard.
+  role            String   @default("redaction")
   creeLe          DateTime @default(now())
 }

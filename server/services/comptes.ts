@@ -3,23 +3,30 @@ import { z } from 'zod'
 import { prisma } from '../utils/db'
 import { ErreurValidation, valider } from '../validation/erreurs'
 
-// Comptes — représentés, pas encore employés.
-//
-// L'authentification, les sessions et la fermeture des routes d'administration
-// sont HORS PÉRIMÈTRE (feature 003). Ce qui est livré ici, c'est la
-// représentation et l'impossibilité STRUCTURELLE d'une fuite d'empreinte
-// (research.md D11).
+// Comptes — identité et vérification de mot de passe.
 //
 // Le point qui compte : aucune opération de lecture exposée ne retourne
 // `motDePasseHache`. Le type de retour l'exclut — ce n'est pas une omission de
 // politesse, c'est une impossibilité de contrat. Un `select` explicite le
 // garantit à l'exécution, le type le garantit à la compilation.
 
+/**
+ * Normalise un identifiant pour comparaison ET pour stockage : sans espaces de
+ * bord ni casse (FR-018, research D4). Appliquée des DEUX côtés — au
+ * provisionnement et à la connexion — pour que la valeur stockée et la valeur
+ * comparée coïncident toujours. Une différence typographique ne refuse pas un
+ * membre légitime, et « Jean@… » / « jean@… » ne font pas deux comptes.
+ */
+export function normaliserIdentifiant(identifiant: string): string {
+  return identifiant.trim().toLowerCase()
+}
+
 /** Les champs qu'un compte expose. `motDePasseHache` n'en fait pas partie. */
 const CHAMPS_PUBLICS = {
   id: true,
   identifiant: true,
   nomAffichable: true,
+  role: true,
   creeLe: true,
 } as const
 
@@ -27,6 +34,7 @@ export interface ComptePublic {
   id: string
   identifiant: string
   nomAffichable: string
+  role: string
   creeLe: Date
 }
 
@@ -54,13 +62,15 @@ export type DonneesCompte = z.infer<typeof schemaCompte>
  */
 export async function creerCompte(donnees: DonneesCompte): Promise<ComptePublic> {
   const valides = valider(schemaCompte, donnees)
+  // Stocké normalisé : la clé `@unique` porte sur la forme trim + minuscule.
+  const identifiant = normaliserIdentifiant(valides.identifiant)
 
   const existant = await prisma.compte.findUnique({
-    where: { identifiant: valides.identifiant },
+    where: { identifiant },
     select: { id: true },
   })
   if (existant) {
-    throw new ErreurValidation(`L'identifiant « ${valides.identifiant} » est déjà pris.`)
+    throw new ErreurValidation(`L'identifiant « ${identifiant} » est déjà pris.`)
   }
 
   // Variante argon2id, paramètres par défaut de la bibliothèque.
@@ -68,7 +78,7 @@ export async function creerCompte(donnees: DonneesCompte): Promise<ComptePublic>
 
   return prisma.compte.create({
     data: {
-      identifiant: valides.identifiant,
+      identifiant,
       nomAffichable: valides.nomAffichable,
       motDePasseHache,
     },
@@ -76,10 +86,10 @@ export async function creerCompte(donnees: DonneesCompte): Promise<ComptePublic>
   })
 }
 
-/** Le compte, SANS l'empreinte, ou `null`. */
+/** Le compte, SANS l'empreinte, ou `null`. Identifiant normalisé à la lecture. */
 export async function compteParIdentifiant(identifiant: string): Promise<ComptePublic | null> {
   return prisma.compte.findUnique({
-    where: { identifiant },
+    where: { identifiant: normaliserIdentifiant(identifiant) },
     select: CHAMPS_PUBLICS,
   })
 }
@@ -96,11 +106,19 @@ export async function verifierMotDePasse(
   // Lecture interne, non exposée : c'est le seul endroit du projet qui lit
   // l'empreinte, et elle ne quitte pas cette fonction.
   const compte = await prisma.compte.findUnique({
-    where: { identifiant },
+    where: { identifiant: normaliserIdentifiant(identifiant) },
     select: { motDePasseHache: true },
   })
 
-  if (!compte) return false
+  if (!compte) {
+    // Compte inconnu : sans vérification, la réponse serait instantanée, quand
+    // un compte connu paie le coût d'argon2 — un écart de TEMPS observable qui
+    // dirait « cet identifiant existe » (FR-011, research D3). On exécute donc
+    // un `verify` LEURRE contre une empreinte fixe pour égaliser grossièrement
+    // le temps de réponse, puis on répond « non » comme pour un mot de passe faux.
+    await argon2.verify(await empreinteDeLeurre(), motDePasse).catch(() => false)
+    return false
+  }
 
   try {
     return await argon2.verify(compte.motDePasseHache, motDePasse)
@@ -109,4 +127,21 @@ export async function verifierMotDePasse(
     // Une empreinte illisible se répond « non », pas par une panne.
     return false
   }
+}
+
+/**
+ * Empreinte argon2id d'égalisation, calculée une fois puis mémorisée. Sa seule
+ * fonction est de faire payer à un identifiant inconnu le même coût de calcul
+ * qu'à un identifiant connu ; elle ne correspond à aucun mot de passe réel.
+ */
+let empreinteLeurre: string | null = null
+async function empreinteDeLeurre(): Promise<string> {
+  if (empreinteLeurre === null) {
+    const calculee = await argon2.hash('empreinte-de-leurre-de-temps-constant', {
+      type: argon2.argon2id,
+    })
+    empreinteLeurre = calculee
+    return calculee
+  }
+  return empreinteLeurre
 }

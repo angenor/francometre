@@ -3,6 +3,13 @@ import { prisma } from '../../server/utils/db'
 import { lireUne, listerArticlesPublics } from '../../server/services/articles'
 import { jouerLeSeed } from './harnais'
 
+// Variables d'amorçage FIXÉES dans le processus de test : `jouerLeSeed` les
+// propage au sous-processus (il diffuse `...process.env`). Le test du compte est
+// ainsi déterministe, sans dépendre d'un `.env` local (research D7).
+process.env.COMPTE_REDACTION_IDENTIFIANT = 'redaction@francometre.com'
+process.env.COMPTE_REDACTION_NOM = 'Rédaction'
+process.env.COMPTE_REDACTION_MOT_DE_PASSE = 'mot-de-passe-de-seed-au-moins-12'
+
 // US7 — Des données d'exemple peuplent les pages à venir.
 // SC-008 : de quoi construire et REGARDER les pages publiques de la feature
 // suivante sans aucune saisie manuelle.
@@ -80,5 +87,34 @@ describe('Données d\'exemple, sur base vierge', () => {
     for (const brouillon of brouillons) {
       expect(visibles.map((a) => a.id)).not.toContain(brouillon.id)
     }
+  })
+
+  // FR-017 — le compte de rédaction est amorcé par le seed : empreinte argon2id,
+  // rôle par défaut, AUCUN mot de passe en clair. Identifiant normalisé.
+  it('crée le compte de rédaction, sans jamais stocker le mot de passe en clair', async () => {
+    const compte = await prisma.compte.findUnique({
+      where: { identifiant: 'redaction@francometre.com' },
+    })
+
+    expect(compte).not.toBeNull()
+    expect(compte!.nomAffichable).toBe('Rédaction')
+    expect(compte!.role).toBe('redaction')
+    // Empreinte argon2id, et surtout PAS le mot de passe d'amorçage en clair.
+    expect(compte!.motDePasseHache.startsWith('$argon2id$')).toBe(true)
+    expect(compte!.motDePasseHache).not.toContain('mot-de-passe-de-seed')
+  })
+
+  it('reste rejouable sur le compte : ni doublon, ni identité changée', async () => {
+    const avant = await prisma.compte.findUniqueOrThrow({
+      where: { identifiant: 'redaction@francometre.com' },
+    })
+
+    jouerLeSeed()
+
+    expect(await prisma.compte.count()).toBe(1)
+    const apres = await prisma.compte.findUniqueOrThrow({
+      where: { identifiant: 'redaction@francometre.com' },
+    })
+    expect(apres.id).toBe(avant.id)
   })
 })

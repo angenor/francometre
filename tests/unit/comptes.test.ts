@@ -47,7 +47,7 @@ describe('Comptes de rédaction', () => {
 
     for (const sortie of [cree, relu]) {
       // Le champ est absent de l'objet, pas seulement vide.
-      expect(Object.keys(sortie!)).toEqual(['id', 'identifiant', 'nomAffichable', 'creeLe'])
+      expect(Object.keys(sortie!)).toEqual(['id', 'identifiant', 'nomAffichable', 'role', 'creeLe'])
       expect('motDePasseHache' in sortie!).toBe(false)
       // Et l'empreinte ne transparaît nulle part dans la sortie sérialisée.
       expect(JSON.stringify(sortie)).not.toContain('$argon2')
@@ -88,5 +88,31 @@ describe('Comptes de rédaction', () => {
   it('refuse un mot de passe trop court, avec un message en français', async () => {
     await expect(creerCompte({ ...COMPTE, motDePasse: 'court' }))
       .rejects.toThrow(/au moins 12 caractères/)
+  })
+
+  // FR-018 — une différence de casse ou d'espaces de bord ne refuse pas un
+  // membre légitime : l'identifiant est normalisé au stockage ET à la
+  // vérification, des deux côtés à l'identique (research D4).
+  it('admet un identifiant à casse et espaces différents (FR-018)', async () => {
+    const cree = await creerCompte({
+      ...COMPTE,
+      identifiant: '  REDACTION@Francometre.COM  ',
+    })
+
+    // Stocké normalisé : trim + minuscule.
+    expect(cree.identifiant).toBe('redaction@francometre.com')
+
+    // Relu et vérifié par une forme typographiquement différente, avec le BON
+    // mot de passe : admis.
+    const relu = await compteParIdentifiant(' Redaction@FRANCOMETRE.com ')
+    expect(relu?.id).toBe(cree.id)
+
+    const admis = await verifierMotDePasse('REDACTION@francometre.COM ', COMPTE.motDePasse)
+    expect(admis).toBe(true)
+  })
+
+  it('expose le rôle par défaut sur un compte créé', async () => {
+    const cree = await creerCompte(COMPTE)
+    expect(cree.role).toBe('redaction')
   })
 })

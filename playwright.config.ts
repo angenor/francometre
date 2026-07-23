@@ -1,3 +1,4 @@
+import 'dotenv/config'
 import { defineConfig, devices } from '@playwright/test'
 
 // Cinq largeurs : 375 (téléphone), 768 (tablette), 999 et 1000 (de part et
@@ -71,5 +72,11 @@ export default defineConfig({
         url: `http://127.0.0.1:${PORT}/styleguide`,
         reuseExistingServer: !process.env.CI,
         timeout: 180_000,
+        // Les cinq projets (largeurs) tournent en parallèle et partagent l'IP
+        // 127.0.0.1 : leurs tentatives d'échec CUMULÉES franchiraient vite le
+        // seuil de limitation de débit et feraient échouer une connexion
+        // légitime. On relève donc le seuil pour le serveur de test — la
+        // limitation reste éprouvée à l'unité (`tests/unit/limiteDebit.test.ts`).
+        env: { ...process.env, LIMITE_DEBIT_SEUIL: '1000' },
       },
 })

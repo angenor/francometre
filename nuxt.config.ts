@@ -24,9 +24,19 @@ export default defineNuxtConfig({
     '@nuxt/fonts',
     '@nuxt/image',
     '@nuxt/icon',
+    'nuxt-auth-utils',
   ],
 
   css: ['~/assets/css/main.css'],
+
+  // `/admin/**` ne se met JAMAIS en cache : sans cela, le cache de l'historique
+  // (bfcache) réafficherait une page d'administration après déconnexion, via le
+  // bouton « précédent » (FR-013). `no-store` la force à être redemandée — le
+  // middleware de refus par défaut s'exécute alors et renvoie à la connexion.
+  routeRules: {
+    '/admin': { headers: { 'cache-control': 'no-store' } },
+    '/admin/**': { headers: { 'cache-control': 'no-store' } },
+  },
 
   // `AppShell`, `RubriqueIcon`… plutôt que `LayoutAppShell`, `UiRubriqueIcon` :
   // les deux dossiers séparent la charpente des composants qu'elle emploie,
@@ -43,6 +53,25 @@ export default defineNuxtConfig({
   // production par `NUXT_PUBLIC_SITE_URL` ; jamais dérivée de l'en-tête `Host`,
   // qui n'est pas fiable et casserait la reproductibilité des tests.
   runtimeConfig: {
+    // Session de nuxt-auth-utils — cookie scellé, AUCUNE table (research D1/D2).
+    // Le secret vient de `NUXT_SESSION_PASSWORD` (≥ 32 caractères, jamais
+    // commité) : le module le lit seul, il n'a pas à figurer ici.
+    //
+    // `maxAge` = 30 jours en secondes, terme ABSOLU : posé à la connexion, il
+    // n'est PAS repoussé par l'activité (clarification « durée absolue 30 j »,
+    // research D2). Cookie durci : `httpOnly` (hors de portée du JS, anti-XSS),
+    // `secure` (HTTPS seul), `sameSite: 'strict'` (aucun envoi cross-site — un
+    // back-office n'a aucun flux cross-site légitime, défense CSRF de fond).
+    session: {
+      maxAge: 2_592_000,
+      name: 'fm_session',
+      cookie: {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'strict',
+      },
+    },
+
     public: {
       siteUrl: 'https://francometre.com',
     },

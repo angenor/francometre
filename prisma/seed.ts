@@ -12,9 +12,11 @@
 // la table depuis la constante, qui reste la source unique.
 
 import 'dotenv/config'
+import argon2 from 'argon2'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from './generated/client.ts'
 import { RUBRIQUES } from '../shared/utils/rubriques.ts'
+import { ROLE_PAR_DEFAUT } from '../shared/utils/roles.ts'
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL!,
@@ -307,11 +309,51 @@ async function semerLesArticles(mediasParCle: Map<string, string>): Promise<void
   )
 }
 
+/**
+ * Le compte de rédaction — amorcé, jamais codé en dur (research D7, FR-017).
+ *
+ * Le mot de passe d'amorçage vient d'une VARIABLE D'ENVIRONNEMENT présente au
+ * seed uniquement ; il est haché en argon2id et seule l'EMPREINTE est écrite.
+ * Le clair ne quitte pas la variable, n'est ni journalisé, ni stocké.
+ *
+ * Sans `COMPTE_REDACTION_MOT_DE_PASSE`, on SAUTE la création en avertissant —
+ * jamais de mot de passe par défaut, qui deviendrait un secret implicite.
+ *
+ * `upsert` sur l'identifiant NORMALISÉ (trim + minuscule) : rejouer le seed ne
+ * crée pas de doublon et ne change pas l'identité (le `cuid` survit).
+ */
+async function semerLeCompte(): Promise<void> {
+  const motDePasse = process.env.COMPTE_REDACTION_MOT_DE_PASSE
+  if (!motDePasse) {
+    console.warn(
+      '  ⚠ COMPTE_REDACTION_MOT_DE_PASSE absente — compte de rédaction NON créé '
+      + '(aucun mot de passe par défaut).',
+    )
+    return
+  }
+
+  const identifiant = (process.env.COMPTE_REDACTION_IDENTIFIANT ?? 'redaction@francometre.com')
+    .trim()
+    .toLowerCase()
+  const nomAffichable = process.env.COMPTE_REDACTION_NOM ?? 'Rédaction'
+
+  const motDePasseHache = await argon2.hash(motDePasse, { type: argon2.argon2id })
+
+  await prisma.compte.upsert({
+    where: { identifiant },
+    update: { nomAffichable, motDePasseHache, role: ROLE_PAR_DEFAUT },
+    create: { identifiant, nomAffichable, motDePasseHache, role: ROLE_PAR_DEFAUT },
+  })
+
+  console.log(`  Compte de rédaction en place (${identifiant}).`)
+}
+
 async function main(): Promise<void> {
   console.log('\nFrancomètre — initialisation des données\n')
   await semerLesRubriques()
   const medias = await semerLesMedias()
   await semerLesArticles(medias)
+  await semerLeCompte()
   console.log('')
 }
 

@@ -116,6 +116,8 @@ describe('Toute écriture refuse une entrée invalide (SC-007)', () => {
       'listerArticlesPublics', 'compterArticlesPublics', 'articlePublicParSlug', 'lireUne',
       'listerRubriques', 'rubriqueParId',
       'mediaParId', 'compteParIdentifiant', 'verifierMotDePasse',
+      // Helper pur, sans accès base : ni lecture ni écriture (FR-018).
+      'normaliserIdentifiant',
     ])
 
     const exportees = [
