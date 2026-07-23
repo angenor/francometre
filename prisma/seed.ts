@@ -82,6 +82,7 @@ const ARTICLES = [
     auteur: 'Camille Renard',
     media: 'exemples/lynx-boreal.jpg',
     couvertureAlt: 'Un lynx boréal de profil, dans la neige.',
+    legende: 'Un lynx boréal photographié dans le massif jurassien, hiver 2025. — Photo d\'illustration',
     joursAvant: 2,
     rangUne: 1,
   },
@@ -95,6 +96,7 @@ const ARTICLES = [
     auteur: 'Yasmine Bouaziz',
     media: 'exemples/salle-de-classe.jpg',
     couvertureAlt: 'Une salle de classe vue du fond, élèves de dos.',
+    legende: 'Une classe de collège lors de la rentrée de septembre. — Photo d\'illustration',
     joursAvant: 5,
     rangUne: 2,
   },
@@ -109,6 +111,7 @@ const ARTICLES = [
     auteur: 'Thomas Lefèvre',
     media: 'exemples/stade-nocturne.jpg',
     couvertureAlt: 'Un stade éclairé la nuit, vu depuis les tribunes hautes.',
+    legende: 'Le stade sous les projecteurs, avant le coup d\'envoi d\'une rencontre en soirée. — Photo d\'illustration',
     joursAvant: 8,
     rangUne: 3,
   },
@@ -122,6 +125,7 @@ const ARTICLES = [
     auteur: 'Awa Diallo',
     media: 'exemples/laboratoire.jpg',
     couvertureAlt: 'Une paillasse de laboratoire, éprouvettes au premier plan.',
+    legende: 'Le laboratoire d\'analyse où sont traités les prélèvements de la cohorte. — Photo d\'illustration',
     joursAvant: 12,
     rangUne: 4,
   },
@@ -135,6 +139,7 @@ const ARTICLES = [
     auteur: 'Léa Marchand',
     media: 'exemples/salle-de-concert.jpg',
     couvertureAlt: 'Une salle de concert vide, sièges rouges, avant l\'entrée du public.',
+    legende: 'La salle quelques minutes avant l\'ouverture des portes. — Photo d\'illustration',
     joursAvant: 15,
     rangUne: 5,
   },
@@ -149,6 +154,7 @@ const ARTICLES = [
     auteur: 'Nicolas Perrin',
     media: 'exemples/serveurs.jpg',
     couvertureAlt: 'Une allée de baies de serveurs, voyants allumés.',
+    legende: 'Une allée de baies dans un centre de données de la région parisienne. — Photo d\'illustration',
     joursAvant: 20,
     rangUne: null,
   },
@@ -164,9 +170,63 @@ const ARTICLES = [
     auteur: null,
     media: null,
     couvertureAlt: null,
+    // Sans couverture, donc sans légende : un brouillon PEUT être incomplet.
+    legende: null,
     joursAvant: null,
     rangUne: null,
   },
+] as const
+
+/**
+ * Compléments d'articles publiés — de quoi rendre DÉMONTRABLES des comportements
+ * que la Une seule n'exerce pas :
+ *
+ *   · « à lire aussi » (US2) : plusieurs articles d'une même rubrique ;
+ *   · la pagination (US3, SC-002) : plus de douze articles → deux pages ;
+ *   · les trois sections de rubrique de l'accueil (Environnement, Économie,
+ *     Culture) peuplées comme sur la maquette (FR-008).
+ *
+ * Ils réutilisent un média d'exemple (une clé de stockage partagée reste
+ * valide), portent chacun un `alt` RÉEL (principe VIII) et alternent sous-thème
+ * présent / absent pour illustrer l'eyebrow contextuel. Aucun n'est à la Une :
+ * les cinq rangs restent ceux des articles principaux. Titres repris des
+ * maquettes.
+ */
+const ENV_SUPPLEMENT = [
+  ['la-foret-face-aux-grands-incendies', 'La forêt française face au retour des grands incendies d\'été', 'Forêts'],
+  ['eoliennes-en-mer-plus-grand-parc-raccorde', 'Éoliennes en mer : le plus grand parc du pays raccordé au réseau', 'Énergie'],
+  ['le-retour-discret-du-lynx-dans-les-vosges', 'Le retour discret du lynx dans les forêts des Vosges', 'Biodiversité'],
+  ['nappes-phreatiques-sous-le-niveau-de-saison', 'Les nappes phréatiques repassent sous le niveau de saison', 'Eau'],
+  ['canicule-precoce-seize-departements-en-vigilance', 'Canicule précoce : seize départements placés en vigilance orange', 'Climat'],
+  ['le-recul-du-trait-de-cote-s-accelere', 'Le recul du trait de côte s\'accélère sur la façade atlantique', 'Littoral'],
+  ['photovoltaique-la-france-franchit-vingt-gigawatts', 'Photovoltaïque : la France franchit le cap des vingt gigawatts', 'Énergie'],
+  ['zero-artificialisation-les-maires-ruraux-reclament-un-report', 'Zéro artificialisation : les maires ruraux réclament un report', null],
+  ['glaciers-alpins-une-fonte-record', 'Glaciers alpins : une fonte record mesurée pour la troisième année', 'Montagne'],
+  ['plan-velo-les-pistes-progressent-le-budget-stagne', 'Plan vélo : les pistes cyclables progressent, le budget stagne', null],
+  ['consigne-des-bouteilles-la-filiere-divisee', 'Consigne des bouteilles plastique : la filière reste divisée', 'Déchets'],
+  ['loup-le-seuil-de-prelevement-releve', 'Loup : le seuil de prélèvement relevé sur fond de tensions pastorales', 'Faune'],
+  ['tempete-hivernale-le-littoral-breton-meurtri', 'Tempête hivernale : le littoral breton compte ses dégâts', null],
+  ['agrivoltaisme-quand-les-panneaux-abritent-les-cultures', 'Agrivoltaïsme : quand les panneaux abritent les cultures', 'Énergie'],
+] as const
+
+const ECO_SUPPLEMENT = [
+  ['la-banque-de-france-releve-sa-prevision-de-croissance', 'La Banque de France relève sa prévision de croissance pour 2026', 'Conjoncture'],
+  ['industrie-les-commandes-repartent-l-emploi-suit', 'Industrie : les commandes repartent, l\'emploi suit avec prudence', 'Emploi'],
+  ['immobilier-les-taux-repassent-sous-les-trois-pour-cent', 'Immobilier : les taux de crédit repassent sous la barre des 3 %', null],
+  ['une-licorne-francaise-perce-dans-la-sante-connectee', 'Une licorne française perce dans la santé connectée', 'Start-up'],
+] as const
+
+const CULT_SUPPLEMENT = [
+  ['le-festival-d-avignon-ouvre-sous-le-signe-de-la-jeunesse', 'Le Festival d\'Avignon ouvre sous le signe de la jeunesse', 'Spectacle vivant'],
+  ['le-louvre-rouvre-une-aile-apres-cinq-ans-de-travaux', 'Le Louvre rouvre une aile entière après cinq ans de travaux', 'Patrimoine'],
+  ['la-scene-rap-francaise-s-exporte-a-l-international', 'La scène rap française s\'exporte enfin à l\'international', null],
+] as const
+
+/** Chaque complément : sa rubrique, un média réutilisé, ses entrées. */
+const SUPPLEMENTS = [
+  { rubriqueId: 'environnement', media: 'exemples/lynx-boreal.jpg', entrees: ENV_SUPPLEMENT },
+  { rubriqueId: 'economie', media: 'exemples/serveurs.jpg', entrees: ECO_SUPPLEMENT },
+  { rubriqueId: 'culture', media: 'exemples/salle-de-concert.jpg', entrees: CULT_SUPPLEMENT },
 ] as const
 
 async function semerLesMedias(): Promise<Map<string, string>> {
@@ -193,11 +253,12 @@ async function semerLesArticles(mediasParCle: Map<string, string>): Promise<void
   const maintenant = Date.now()
 
   for (const article of ARTICLES) {
-    const { media, joursAvant, ...reste } = article
+    const { media, joursAvant, legende, ...reste } = article
 
     const donnees = {
       ...reste,
       couvertureId: media ? mediasParCle.get(media)! : null,
+      couvertureLegende: legende,
       statut: joursAvant === null ? 'brouillon' : 'publie',
       publieLe: joursAvant === null
         ? null
@@ -211,8 +272,39 @@ async function semerLesArticles(mediasParCle: Map<string, string>): Promise<void
     })
   }
 
-  const publies = ARTICLES.filter((a) => a.joursAvant !== null).length
-  console.log(`  ${ARTICLES.length} articles d'exemple en place, dont ${publies} publiés.`)
+  // Compléments par rubrique — publiés, hors Une, datés en cascade après les
+  // articles principaux pour un ordre déterministe.
+  let complements = 0
+  for (const { rubriqueId, media, entrees } of SUPPLEMENTS) {
+    const mediaId = mediasParCle.get(media)!
+    for (const [index, [slug, titre, sousTheme]] of entrees.entries()) {
+      const donnees = {
+        titre,
+        slug,
+        chapo: 'Un point sur l\'actualité de la semaine.',
+        corps: `<p>${titre}. Le dossier en bref, avant une analyse plus détaillée à venir.</p>`,
+        rubriqueId,
+        sousTheme,
+        auteur: 'Rédaction',
+        couvertureId: mediaId,
+        couvertureAlt: `Photographie d'illustration : ${titre.toLowerCase()}.`,
+        couvertureLegende: null,
+        statut: 'publie',
+        publieLe: new Date(maintenant - (25 + complements + index) * 24 * 60 * 60 * 1000),
+      }
+      await prisma.article.upsert({
+        where: { slug },
+        update: donnees,
+        create: donnees,
+      })
+    }
+    complements += entrees.length
+  }
+
+  const publies = ARTICLES.filter((a) => a.joursAvant !== null).length + complements
+  console.log(
+    `  ${ARTICLES.length + complements} articles d'exemple en place, dont ${publies} publiés.`,
+  )
 }
 
 async function main(): Promise<void> {

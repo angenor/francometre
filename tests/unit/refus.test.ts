@@ -113,7 +113,7 @@ describe('Toute écriture refuse une entrée invalide (SC-007)', () => {
   it('couvre EXACTEMENT les fonctions d\'écriture exposées par les services', () => {
     // Les lectures et les types ne sont pas des écritures ; tout le reste l'est.
     const LECTURES = new Set([
-      'listerArticlesPublics', 'articlePublicParSlug', 'lireUne',
+      'listerArticlesPublics', 'compterArticlesPublics', 'articlePublicParSlug', 'lireUne',
       'listerRubriques', 'rubriqueParId',
       'mediaParId', 'compteParIdentifiant', 'verifierMotDePasse',
     ])

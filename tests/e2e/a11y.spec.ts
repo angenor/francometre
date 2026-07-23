@@ -42,4 +42,47 @@ for (const theme of ['light', 'dark'] as const) {
     const resultat = await analyser(page)
     expect(resultat.violations, JSON.stringify(resultat.violations, null, 2)).toEqual([])
   })
+
+  // Pages publiques de la feature 003 — contraste AA (mesuré DANS les deux
+  // thèmes, l'accent valant deux fois), textes alternatifs, aria-current
+  // (porte 8, SC-008). Le contrôle du contraste par axe couvre l'accent en
+  // clair (#1F35FF) comme en sombre (#8A97FF).
+  for (const [intitule, chemin] of [
+    ['l’accueil', '/'],
+    ['la page rubrique', '/rubrique/environnement'],
+    ['la page article', '/article/le-retour-du-lynx-dans-le-jura'],
+  ] as const) {
+    test(`${intitule} passe AA en thème ${nom}`, async ({ page }) => {
+      await page.addInitScript((t) => window.localStorage.setItem('francometre-theme', t), theme)
+      await ouvrir(page, chemin)
+
+      const resultat = await analyser(page)
+      expect(resultat.violations, JSON.stringify(resultat.violations, null, 2)).toEqual([])
+    })
+  }
 }
+
+test.describe('États et repères d’accessibilité des pages publiques', () => {
+  test('toute couverture d’article porte un texte alternatif réel (FR-030)', async ({ page }) => {
+    await ouvrir(page, '/article/le-retour-du-lynx-dans-le-jura')
+    const image = page.locator('figure img').first()
+    const alt = await image.getAttribute('alt')
+    expect(alt?.trim().length ?? 0).toBeGreaterThan(0)
+  })
+
+  test('la rubrique affichée est marquée aria-current dans la colonne', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) < 1000, 'La colonne n’est visible qu’à partir de 1000 px.')
+
+    await ouvrir(page, '/rubrique/environnement')
+    const courant = page.getByTestId('rail').getByRole('link', { name: 'Environnement' })
+    await expect(courant).toHaveAttribute('aria-current', 'page')
+  })
+
+  test('le repère de focus reste visible sur la pagination', async ({ page }) => {
+    await ouvrir(page, '/rubrique/environnement')
+    const suivant = page.getByRole('link', { name: 'Suivant' })
+    await suivant.focus()
+    const contour = await suivant.evaluate((el) => getComputedStyle(el).outlineStyle)
+    expect(contour).not.toBe('none')
+  })
+})

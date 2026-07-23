@@ -30,11 +30,23 @@ export default defineNuxtConfig({
 
   // `AppShell`, `RubriqueIcon`… plutôt que `LayoutAppShell`, `UiRubriqueIcon` :
   // les deux dossiers séparent la charpente des composants qu'elle emploie,
-  // ils n'ont pas à alourdir les noms d'usage.
+  // ils n'ont pas à alourdir les noms d'usage. Les composants publics des pages
+  // (Une, grille, pagination, fil d'Ariane…) suivent la même règle sans préfixe.
   components: [
     { path: '~/components/layout', pathPrefix: false },
     { path: '~/components/ui', pathPrefix: false },
+    { path: '~/components/public', pathPrefix: false },
   ],
+
+  // Origine absolue du site — seul le flux RSS et le plan du site en composent
+  // des URL absolues (contrats/diffusion, research D6). Surchargeable en
+  // production par `NUXT_PUBLIC_SITE_URL` ; jamais dérivée de l'en-tête `Host`,
+  // qui n'est pas fiable et casserait la reproductibilité des tests.
+  runtimeConfig: {
+    public: {
+      siteUrl: 'https://francometre.com',
+    },
+  },
 
   vite: {
     plugins: [tailwindcss()],
