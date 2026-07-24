@@ -1,5 +1,5 @@
 import { articlePublicParSlug, listerArticlesPublics } from '../../services/articles'
-import { articleDe, carteDe } from '../../utils/presentation'
+import { articleDe, carteDe, metaSeoArticleDe } from '../../utils/presentation'
 import type { RubriqueId } from '../../../shared/utils/rubriques.ts'
 import type { ArticlePageDTO } from '../../../shared/types/dto.ts'
 
@@ -36,5 +36,10 @@ export default defineEventHandler(async (event): Promise<ArticlePageDTO> => {
     // Contexte = la rubrique de l'article : l'eyebrow bascule sur le sous-thème.
     .map((autre) => carteDe(autre, rubriqueId))
 
-  return { article: articleDe(article), aLireAussi }
+  // Le SEO se calcule à la lecture (D8) : l'origine vient de la config, jamais
+  // de l'en-tête `Host`. `metaSeoArticleDe` est la seule fabrique d'URL absolue
+  // de média (via `stockage.urlAbsolue`, porte 9).
+  const seo = metaSeoArticleDe(article, useRuntimeConfig(event).public.siteUrl)
+
+  return { article: articleDe(article), aLireAussi, seo }
 })

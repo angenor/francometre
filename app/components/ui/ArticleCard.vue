@@ -128,15 +128,20 @@ const dateMachine = computed(() => instant.value?.toISOString() ?? undefined)
       class="relative aspect-video overflow-hidden bg-surface"
     >
       <!--
-        Chargement immédiat, délibérément : un média différé qui n'est jamais
-        demandé ne signale jamais son échec, et l'état de repli ne se
-        déclencherait pas. Le format 16:9 du conteneur réserve la place, il n'y
-        a donc aucun décalage à craindre.
+        Chargement PARESSEUX (hors écran → différé) : le format 16:9 du conteneur
+        réserve la place, aucun décalage. `<img>` NATIF (non `<NuxtImg>`) : son
+        repli `@error` se déclenche de façon FIABLE même sur un échec survenu avant
+        l'hydratation (research D10). Le `srcset` webp dimensionné est servi par la
+        route média (`srcsetVignette`) ; hors `/medias/` il est absent et la source
+        (SVG de démo) est servie telle quelle.
       -->
       <img
         data-role="visuel"
         :src="image"
+        :srcset="srcsetVignette(image)"
         :alt="imageAlt"
+        sizes="(max-width: 1000px) 50vw, 25vw"
+        loading="lazy"
         class="absolute inset-0 h-full w-full object-cover transition-transform duration-(--transition-survol) group-hover:transform-[scale(1.03)] group-focus-visible:transform-[scale(1.03)]"
         @error="echecImage = true"
       >

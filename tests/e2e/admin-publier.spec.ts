@@ -84,7 +84,10 @@ test.describe('US3 — Publier', () => {
     await attente
 
     // Visible sur le site public (le plus récemment publié → première page).
-    await ouvrir(page, '/articles')
+    // Requête UNIQUE : `/articles` est en cache `swr` (006) et servirait du
+    // contenu périmé après cette publication. Un paramètre distinct force un SSR
+    // frais — on éprouve la VISIBILITÉ publiée, pas la fraîcheur du cache (M2).
+    await ouvrir(page, `/articles?f=${jeton()}`)
     await expect(page.getByText(titre)).toBeVisible()
   })
 
@@ -100,7 +103,10 @@ test.describe('US3 — Publier', () => {
     await attente
 
     // Absent du public jusqu'à l'échéance (FR-014b).
-    await ouvrir(page, '/articles')
+    // Requête UNIQUE : `/articles` est en cache `swr` (006) et servirait du
+    // contenu périmé après cette publication. Un paramètre distinct force un SSR
+    // frais — on éprouve la VISIBILITÉ publiée, pas la fraîcheur du cache (M2).
+    await ouvrir(page, `/articles?f=${jeton()}`)
     await expect(page.getByText(titre)).toHaveCount(0)
   })
 

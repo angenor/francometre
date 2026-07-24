@@ -16,6 +16,7 @@
     "verifier": "node scripts/verifier.mjs",
     "test:unit": "vitest run",
     "test:e2e": "playwright test",
+    "audit": "AUDIT=1 FRANCOMETRE_URL=http://127.0.0.1:3000 playwright test tests/e2e/audit.spec.ts --project=1440px",
     "db:seed": "prisma db seed"
   },
   "dependencies": {
@@ -44,13 +45,18 @@
     "vue-router": "^4.5.0",
     "zod": "4.4.3"
   },
+  "overrides": {
+    "sharp": "0.35.3"
+  },
   "devDependencies": {
     "@axe-core/playwright": "4.12.1",
     "@playwright/test": "1.61.1",
     "@types/node": "^26.1.1",
     "@types/sanitize-html": "2.16.1",
     "better-sqlite3": "12.11.1",
+    "lighthouse": "^13.4.1",
     "nitropack": "2.13.4",
+    "playwright-lighthouse": "^4.0.0",
     "typescript": "^5.9.0",
     "vitest": "4.1.10",
     "vue-tsc": "^3.0.0"

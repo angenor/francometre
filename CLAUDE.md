@@ -24,7 +24,20 @@ npm run test:unit        # Vitest — les règles de gestion, base SQLite éphé
 npm run test:e2e         # Playwright — le socle visuel de Fondations
 npm run verifier         # six contrôles : sobriété (3) et portabilité (3)
 npm run typecheck
+
+# Audit Lighthouse ≥ 90 (perf/réf/a11y), profils mobile ET bureau (SC-001).
+# LOURD, hors test:e2e : lancer contre une PRÉVERSION DE PRODUCTION.
+npm run build && npm run preview   # terminal 1 (sert sur :3000)
+npm run audit                      # terminal 2
 ```
+
+Note portabilité images : les couvertures passent par `<NuxtImg>` avec le
+fournisseur **`medias`** (`providers/medias.ts`). Il ne fait AUCune requête tierce
+ni boucle locale : il compose l'adresse d'une variante (`/medias/<clé>?w=&f=&q=`)
+que la route `server/routes/medias/[...cle]` produit **en ligne** via `sharp`, à
+partir du tampon lu par `Stockage` (porte 9). Les SVG de démonstration et les
+actifs de `public/` passent inchangés. Le jour du passage à S3, rien ne change :
+la route sert alors depuis S3.
 
 Il n'y a pas de `npm run lint` : le dépôt n'a pas d'ESLint. `verifier` et `typecheck`
 tiennent ce rôle.

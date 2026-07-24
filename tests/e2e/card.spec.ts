@@ -162,6 +162,11 @@ test('une image qui échoue au chargement produit le rendu « sans image »', as
   await ouvrir(page)
 
   const carte = page.getByTestId('carte-repos')
+  // La vignette charge en `lazy` (US4) : on l'amène à l'écran pour que sa requête
+  // parte, échoue (abort) et déclenche le repli — exactement comme pour un lecteur
+  // qui l'atteint au défilement (research D10). Une vignette jamais atteinte n'est
+  // jamais demandée, et son repli est sans objet.
+  await carte.scrollIntoViewIfNeeded()
   await expect(carte.locator('[data-role="image"]')).toHaveCount(0)
   await expect(carte).toHaveCSS('border-top-width', '2px')
 })

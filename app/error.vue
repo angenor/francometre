@@ -42,18 +42,35 @@ function reessayer() {
   if (import.meta.client) window.location.reload()
 }
 
+// Une page système ne s'indexe pas (FR-006) ; sa description suit l'état
+// (404/503/500). `follow` laisse rejoindre le contenu proposé plus bas.
 useHead({ title: `Francomètre — ${code.value}` })
+useSeoMeta({
+  description: () => message.value,
+  robots: ROBOTS_NOINDEX,
+})
 </script>
 
 <template>
   <NuxtLayout>
     <section class="py-28 text-center">
-      <div class="font-titre text-[96px] socle:text-[160px] leading-[0.86] font-extra-grasse tracking-[-0.03em] text-line [font-variant-numeric:tabular-nums]">
+      <!-- Chiffre en filigrane, couleur « filet » (maquette `etats.html`) :
+           ORNEMENT. Le sens est porté par le `h1` ci-dessous, jamais par ce
+           contraste volontairement faible — d'où `aria-hidden` (retiré de l'arbre
+           d'accessibilité). WCAG 1.4.3 exempte le texte purement décoratif du
+           contraste minimal ; `data-role="filigrane"` le signale à l'audit. -->
+      <div
+        aria-hidden="true"
+        data-role="filigrane"
+        class="font-titre text-[96px] socle:text-[160px] leading-[0.86] font-extra-grasse tracking-[-0.03em] text-line [font-variant-numeric:tabular-nums]"
+      >
         {{ code }}
       </div>
-      <p class="mx-auto mt-7 max-w-[40ch] font-titre text-[22px] socle:text-[27px] leading-[1.3] font-demi-grasse tracking-titre text-ink text-balance">
+      <!-- Le message EST le titre de la page (SC-010) : un `h1`, non un `p`. Le
+           grand chiffre au-dessus reste décoratif (`div`). Rendu identique. -->
+      <h1 class="mx-auto mt-7 max-w-[40ch] font-titre text-[22px] socle:text-[27px] leading-[1.3] font-demi-grasse tracking-titre text-ink text-balance">
         {{ message }}
-      </p>
+      </h1>
       <!-- « Réessayer » — seul usage d'accent de la page, tracé à `etats.html`. -->
       <div v-if="reessayable" class="mt-7">
         <button

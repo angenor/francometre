@@ -25,6 +25,16 @@ export interface Stockage {
    * n'interroge rien — c'est ce qui permet de l'appeler au rendu sans coût.
    */
   url: (cle: string) => string
+  /**
+   * Calcule l'adresse ABSOLUE d'affichage — la seule fabrique légitime d'URL
+   * absolue de média (Open Graph, JSON-LD ; porte 9, research D6).
+   *
+   * Sur disque, `url` est relative : on la préfixe de l'`origine`. Le jour du
+   * passage à S3, `url` sera DÉJÀ absolue et l'`origine` sera ignorée — cette
+   * différence est encapsulée ICI, jamais par une concaténation ailleurs (qui
+   * produirait un double préfixe le jour venu). PURE et SYNCHRONE comme `url`.
+   */
+  urlAbsolue: (cle: string, origine: string) => string
 }
 
 /** Racine locale des médias, hors du code. Le préfixe public la reflète. */
@@ -73,6 +83,12 @@ const stockageDisque: Stockage = {
 
   url(cle) {
     return `${PREFIXE_PUBLIC}/${cle.replace(/^\/+/, '')}`
+  },
+
+  urlAbsolue(cle, origine) {
+    // `origine` sans barre finale, `url(cle)` commence par « / » : la jonction
+    // ne double jamais le séparateur.
+    return origine.replace(/\/+$/, '') + this.url(cle)
   },
 }
 

@@ -85,8 +85,11 @@ test.describe('US4 — Composer la Une', () => {
     const apres = await composition(page)
     expect(apres.emplacements[0]!.article!.id).toBe(cible.id)
 
-    // L'accueil public montre bien la cible (recomposé).
-    await ouvrir(page, '/')
+    // L'accueil public montre bien la cible (recomposé). Requête UNIQUE : l'accueil
+    // est en cache `swr` (006) et servirait du contenu périmé après ce
+    // réordonnancement ; un paramètre distinct force un SSR frais (ignoré par la
+    // page, qui ne lit aucune query).
+    await ouvrir(page, `/?f=${Math.random().toString(36).slice(2)}`)
     await expect(page.getByText(cible.titre).first()).toBeVisible()
 
     // Remise en état pour ne pas polluer les autres exécutions.
