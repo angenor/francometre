@@ -44,6 +44,49 @@ tiennent ce rôle.
 
 ---
 
+## Déploiement
+
+Hébergement **Docker**. **Provisoire** : francomètre est co-hébergé sur le VPS
+d'africans (`161.97.92.63`), **derrière le nginx d'africans** ; un VPS dédié est
+prévu. Tout est dans `deploy/` et `docker-compose.prod.yml` ; le runbook complet
+(premier déploiement, migration vers le VPS dédié) est dans `deploy/README.md`.
+
+Topologie : francomètre tourne en **conteneur applicatif seul** (`francometre_app`,
+Nitro sur `:3000`), **aucun port publié sur l'hôte** — le conflit sur 80/443
+(tenus par `uafricas_nginx`) est évité ainsi. Le nginx d'africans rejoint le
+réseau Docker partagé `francometre_net` et proxifie `francometre.com` (+ `www`)
+vers le conteneur, via le vhost `deploy/nginx/francometre.conf`.
+
+Piloté depuis `deploy/deploy.sh` (SSH par clé, `root@161.97.92.63`) :
+
+```bash
+cd deploy
+./deploy.sh setup     # clone, réseau partagé, .env + secrets (note le mdp rédaction)
+./deploy.sh deploy    # build image + up (migrations jouées au boot)
+./deploy.sh ssl       # certificat Let's Encrypt (apex + www) — arrête brièvement le nginx d'africans
+./deploy.sh seed      # 8 rubriques + compte + exemples — UNE fois
+./deploy.sh update|logs|status|backup|restart|stop|rebuild|connect
+```
+
+Invariants à ne pas oublier :
+
+- **Le serveur déploie depuis `origin/main`** (`git reset --hard`) : tout doit être
+  poussé sur `main` avant `deploy`/`update`.
+- **Migrations** jouées à chaque démarrage (`prisma migrate deploy`, idempotent) ;
+  **seed** JAMAIS au boot (il retraiterait les images d'exemple) → `deploy.sh seed`.
+- Persistance par volumes : `francometre_db` (SQLite, `/data/db`) et
+  `francometre_medias` (`/app/stockage/medias`). `.env` généré sur le serveur,
+  jamais dans l'image ni le dépôt.
+- Le certificat de francomètre est déposé dans le dossier `ssl` **monté par le
+  nginx d'africans** ; le vhost le référence à `/etc/nginx/ssl/francometre-*.pem`
+  (seul chemin à vérifier si le montage d'africans diffère).
+- **Couplage à africans** (à retoucher dans le dépôt africans pour la persistance,
+  cf. `deploy/README.md`) : réseau `francometre_net` attaché au service nginx, et
+  vhost collé dans son `nginx.conf`. Ce couplage disparaît sur le VPS dédié, où
+  francomètre reprend ses propres 80/443 avec son nginx — sans toucher au code métier.
+
+---
+
 ## Stack
 
 | Couche | Choix | Contrainte |

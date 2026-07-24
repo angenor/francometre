@@ -1,0 +1,56 @@
+# Francomètre — pile de production (Docker Compose).
+#
+# UNE seule application : le serveur Nuxt/Nitro. Pas de conteneur de base de
+# données (SQLite est embarqué dans l'app, sur un volume), pas de nginx propre :
+# la porte d'entrée HTTPS est le nginx d'africans, qui rejoint le réseau partagé
+# `francometre_net` et proxifie francometre.com vers ce conteneur.
+#
+# AUCUN port n'est publié sur l'hôte : francometre n'est joignable que par le
+# nginx d'africans, à travers le réseau partagé. C'est ce qui évite le conflit
+# sur les ports 80/443, déjà tenus par uafricas_nginx.
+
+services:
+  francometre:
+    build:
+      context: .
+      dockerfile: deploy/Dockerfile
+    image: francometre:latest
+    container_name: francometre_app
+    restart: unless-stopped
+
+    # Secrets et réglages générés sur le serveur par `deploy.sh setup`.
+    env_file:
+      - .env
+    # Redondant avec .env, mais garantit ces valeurs même si .env est incomplet.
+    environment:
+      NODE_ENV: production
+      NITRO_HOST: 0.0.0.0
+      NITRO_PORT: "3000"
+      PORT: "3000"
+
+    volumes:
+      # Base SQLite — persistée hors de l'arbre applicatif.
+      - francometre_db:/data/db
+      # Médias téléversés et d'exemple — `stockage/medias` relatif à /app.
+      - francometre_medias:/app/stockage/medias
+
+    networks:
+      - francometre_net
+
+    healthcheck:
+      # `/robots.txt` ne touche pas la base : sonde fiable même base non semée.
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/robots.txt"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  francometre_db:
+  francometre_medias:
+
+networks:
+  # Réseau partagé avec le nginx d'africans. Créé et attaché par `deploy.sh`
+  # (`docker network create francometre_net` + attache de uafricas_nginx).
+  francometre_net:
+    external: true

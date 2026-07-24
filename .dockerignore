@@ -1,0 +1,52 @@
+# Contexte de build Docker — on n'envoie QUE la source.
+# Les artefacts (client Prisma, .output, node_modules) sont (re)produits DANS
+# le conteneur : les copier depuis le Mac embarquerait des binaires natifs
+# (better-sqlite3, sharp) compilés pour macOS, inutilisables sous Linux.
+
+node_modules
+
+# Sorties de compilation — reconstruites dans l'étape « builder »
+.nuxt
+.output
+.data
+dist
+build
+
+# Caches d'outillage
+.nitro
+.cache
+.vite
+
+# Prisma — client régénéré au build, base locale jamais embarquée
+prisma/generated
+prisma/*.db
+prisma/*.db-journal
+
+# Médias sur disque — données, jamais dans l'image (volume au run)
+stockage
+
+# Secrets locaux — le .env de production est généré sur le serveur
+.env
+.env.*
+!.env.production.example
+
+# Tests, rapports, docs, specs — hors chaîne de build
+tests
+test-results
+playwright-report
+blob-report
+playwright/.cache
+scripts
+docs
+specs
+.specify
+.claude
+
+# Divers
+.git
+.gitignore
+*.log
+.DS_Store
+Thumbs.db
+.vscode
+.idea
