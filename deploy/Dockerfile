@@ -19,6 +19,12 @@ RUN apt-get update \
 
 WORKDIR /app
 
+# Le postinstall lance `prisma generate`, qui charge `prisma.config.ts` ; or
+# `env('DATABASE_URL')` y EXIGE la variable, même sans aucune connexion. Valeur
+# FACTICE, valable au seul temps de build : la vraie URL vient de l'environnement
+# d'exécution (Compose env_file). Aucune base n'est touchée ici.
+ENV DATABASE_URL=file:/tmp/build-placeholder.db
+
 # `npm ci` déclenche le postinstall (`prisma generate && nuxt prepare`), qui a
 # besoin de TOUT le projet : on copie la source avant d'installer.
 COPY . .
