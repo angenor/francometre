@@ -46,6 +46,7 @@ export default defineNuxtConfig({
     { path: '~/components/layout', pathPrefix: false },
     { path: '~/components/ui', pathPrefix: false },
     { path: '~/components/public', pathPrefix: false },
+    { path: '~/components/admin', pathPrefix: false },
   ],
 
   // Origine absolue du site — seul le flux RSS et le plan du site en composent
@@ -81,18 +82,20 @@ export default defineNuxtConfig({
     plugins: [tailwindcss()],
   },
 
-  // `better-sqlite3` est un module natif qui localise son binaire `.node` par
-  // une résolution dynamique que l'analyse statique rate régulièrement — le
-  // symptôme (`Could not locate the bindings file`) apparaît au DÉMARRAGE du
-  // serveur compilé, pas à la compilation (research.md D15).
+  // `better-sqlite3` et `sharp` sont des modules natifs qui localisent leur
+  // binaire `.node` par une résolution dynamique que l'analyse statique rate
+  // régulièrement — le symptôme (`Could not locate the bindings file`) apparaît
+  // au DÉMARRAGE du serveur compilé, pas à la compilation (research.md D15/D7).
+  // `sharp` est importé directement par `server/utils/image.ts` (téléversement) :
+  // le tracer garantit que son binaire est embarqué au bundle.
   //
   // Interface de nitropack 2.13.4, vérifiée dans node_modules : `inline`,
   // `external`, `traceInclude`. Les `noExternals` et `traceDeps` que documente
   // nitro.build relèvent de Nitro v3 et n'existent pas ici.
   nitro: {
     externals: {
-      external: ['better-sqlite3', '@prisma/adapter-better-sqlite3'],
-      traceInclude: [requis.resolve('better-sqlite3')],
+      external: ['better-sqlite3', '@prisma/adapter-better-sqlite3', 'sharp'],
+      traceInclude: [requis.resolve('better-sqlite3'), requis.resolve('sharp')],
     },
 
     // Le troisième contexte de types. `typescript.tsConfig` et

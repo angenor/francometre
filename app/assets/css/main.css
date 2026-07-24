@@ -11,6 +11,9 @@
 
 @import "tailwindcss";
 @import "./tokens.css";
+/* La typographie du corps, source unique partagée par le rendu public
+   (`CorpsArticle`) et l'éditeur TipTap (research.md D2). */
+@import "./corps.css";
 
 /* ----------------------------------------------------------------------------
    Variante sombre raccordée à la CLASSE, non à `prefers-color-scheme`.

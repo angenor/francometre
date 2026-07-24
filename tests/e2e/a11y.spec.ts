@@ -1,6 +1,6 @@
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test, type Page } from '@playwright/test'
-import { ouvrir } from './_aides'
+import { ouvrir, seConnecterAdmin } from './_aides'
 
 /**
  * Contrôle d'accessibilité automatisé.
@@ -84,5 +84,46 @@ test.describe('États et repères d’accessibilité des pages publiques', () =>
     await suivant.focus()
     const contour = await suivant.evaluate((el) => getComputedStyle(el).outlineStyle)
     expect(contour).not.toBe('none')
+  })
+})
+
+// Back-office (005) — axe sans violation sur les trois écrans + éditeur, DANS LES
+// DEUX THÈMES (porte 8, SC-008) ; focus visible ; aria-current sur la page rendue.
+test.describe('Back-office — accessibilité (porte 8)', () => {
+  const ECRANS = [
+    ['la liste des articles', '/admin/articles'],
+    ['l’éditeur', '/admin/articles/nouveau'],
+    ['composer la Une', '/admin/une'],
+  ] as const
+
+  for (const theme of ['light', 'dark'] as const) {
+    const nom = theme === 'dark' ? 'sombre' : 'clair'
+    for (const [intitule, chemin] of ECRANS) {
+      test(`${intitule} passe AA en thème ${nom}`, async ({ page }) => {
+        await page.addInitScript((t) => window.localStorage.setItem('francometre-theme', t), theme)
+        await seConnecterAdmin(page)
+        await ouvrir(page, chemin)
+
+        const resultat = await analyser(page)
+        expect(resultat.violations, JSON.stringify(resultat.violations, null, 2)).toEqual([])
+      })
+    }
+  }
+
+  test('le repère de focus reste visible sur la barre d’outils de l’éditeur', async ({ page }) => {
+    await seConnecterAdmin(page)
+    await ouvrir(page, '/admin/articles/nouveau')
+    const bouton = page.getByRole('button', { name: 'Gras' })
+    await bouton.focus()
+    const contour = await bouton.evaluate((el) => getComputedStyle(el).outlineStyle)
+    expect(contour).not.toBe('none')
+  })
+
+  test('l’entrée de rail active porte aria-current sur la page rendue', async ({ page }) => {
+    test.skip((page.viewportSize()?.width ?? 0) < 1000, 'Le rail n’est visible qu’à partir de 1000 px.')
+    await seConnecterAdmin(page)
+    await ouvrir(page, '/admin/une')
+    const actif = page.getByTestId('rail-admin').getByRole('link', { name: 'À la une' })
+    await expect(actif).toHaveAttribute('aria-current', 'page')
   })
 })

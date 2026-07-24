@@ -93,3 +93,83 @@ export interface ArticlePageDTO {
   article: ArticleDTO
   aLireAussi: CarteDTO[]
 }
+
+// ---------------------------------------------------------------------------
+// DTO d'ADMINISTRATION (data-model §3) — formes d'affichage du back-office,
+// produites par les routes `/api/admin/**`, jamais des entités brutes Prisma.
+//
+// Comme les DTO publics, `image` reste une ADRESSE D'APPLICATION (`/medias/<clé>`,
+// calculée par `stockage.url`), jamais persistée : la base ne range qu'une clé.
+// ---------------------------------------------------------------------------
+
+/** Une ligne de la table « Articles » (dérivé 3). */
+export interface LigneArticleAdmin {
+  id: string
+  titre: string
+  rubrique: { id: RubriqueId, libelle: string }
+  statut: 'brouillon' | 'publie'
+  rangUne: number | null        // 1..5 ou null (affiché « 01 » … ou « — »)
+  date: string                  // publieLe si publié, sinon modifieLe (ISO)
+  image?: string                // /medias/<clé> ou absent (brouillon sans couverture)
+  imageAlt?: string
+}
+
+/** La liste paginée d'administration. */
+export interface ListeAdminDTO {
+  articles: LigneArticleAdmin[]
+  page: number
+  taille: number
+  total: number
+  totalPages: number
+}
+
+/** L'article complet chargé dans l'éditeur (brouillon compris). */
+export interface ArticleEditionDTO {
+  id: string
+  titre: string
+  slug: string
+  chapo: string
+  corpsHtml: string             // déjà assaini
+  sousTheme: string | null
+  auteur: string | null
+  statut: 'brouillon' | 'publie'
+  publieLe: string | null       // ISO ou null
+  rubriqueId: RubriqueId
+  rangUne: number | null
+  couverture: { id: string, url: string, alt: string | null, legende: string | null } | null
+  modifieLe: string             // pour l'indicateur d'autosave
+}
+
+/** Un des cinq emplacements de « Composer la Une » (dérivé 1). */
+export interface EmplacementUneDTO {
+  rang: number                  // 1..5 ; rang 1 = héros
+  article: {
+    id: string
+    titre: string
+    rubrique: string            // libellé (eyebrow de rubrique, contexte accueil)
+    image?: string
+    imageAlt?: string
+  } | null                      // null = « Emplacement libre »
+}
+
+/** Un article publiable, proposé à l'épinglage (dérivé 2). */
+export interface ArticlePubliableDTO {
+  id: string
+  titre: string
+  rubrique: string              // libellé
+  image?: string
+  imageAlt?: string
+}
+
+/** La réponse de GET /api/admin/une. */
+export interface CompositionUneDTO {
+  emplacements: EmplacementUneDTO[]   // toujours 5, rang 1..5, article ou null
+  publiables: ArticlePubliableDTO[]   // publiés NON épinglés, filtrables par recherche
+}
+
+/** La réponse de POST /api/admin/medias (téléversement). */
+export interface MediaTeleverseDTO {
+  id: string
+  cle: string
+  url: string                   // /medias/<clé> (= stockage.url(cle))
+}

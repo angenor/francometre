@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { ouvrir } from './_aides'
+import { ouvrir, seConnecterAdmin } from './_aides'
 
 /**
  * US3 — le socle sur petit écran.
@@ -176,4 +176,29 @@ test.describe('Gouttière', () => {
 
     expect(mesuree).toBe(attendue)
   })
+})
+
+// Back-office (005) — aucun débordement horizontal, colonnes empilées, table
+// dense défilant dans son propre conteneur (D14). Contrôlé à toutes les largeurs,
+// dont 375 px, dans les deux thèmes.
+test.describe('Back-office — aucun débordement horizontal', () => {
+  const ECRANS = [
+    ['la liste', '/admin/articles'],
+    ['l’éditeur', '/admin/articles/nouveau'],
+    ['composer la Une', '/admin/une'],
+  ] as const
+
+  for (const [nom, chemin] of ECRANS) {
+    for (const theme of ['light', 'dark'] as const) {
+      test(`${nom} ne déborde pas (thème ${theme === 'dark' ? 'sombre' : 'clair'})`, async ({ page }) => {
+        await page.addInitScript((t) => window.localStorage.setItem('francometre-theme', t), theme)
+        await seConnecterAdmin(page)
+        await ouvrir(page, chemin)
+
+        const ecart = await debordement(page)
+        expect(ecart.document, 'le document déborde horizontalement').toBeLessThanOrEqual(0)
+        expect(ecart.corps, 'le corps déborde horizontalement').toBeLessThanOrEqual(0)
+      })
+    }
+  }
 })

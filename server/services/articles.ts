@@ -258,8 +258,98 @@ export async function lireUne(instant?: Date) {
 }
 
 // ---------------------------------------------------------------------------
+// Lecture d'ADMINISTRATION
+//
+// Un chemin de lecture DISTINCT des lectures publiques (research.md D12) : il
+// n'applique PAS `filtreVisible`, donc l'admin voit les brouillons ET les
+// articles datés du futur. Il ne rouvre pas la fuite fermée par la 002 — il vit
+// derrière `exigerCompte`, contrat fermé par défaut.
+// ---------------------------------------------------------------------------
+
+export interface OptionsListeAdmin {
+  /** Sous-chaîne du titre, insensible à la casse (LIKE de SQLite). */
+  q?: string
+  rubriqueId?: string
+  statut?: 'brouillon' | 'publie'
+  page?: number
+  taille?: number
+}
+
+/**
+ * Le filtre partagé par la liste et son comptage : un total dérivé d'un autre
+ * `where` trahirait le découpage des pages. Filtres cumulables, tous côté
+ * serveur. Le `contains` de SQLite est insensible à la casse pour l'ASCII —
+ * jamais `mode: 'insensitive'`, que l'adaptateur SQLite refuse.
+ */
+function critereAdmin(options: OptionsListeAdmin) {
+  const { q, rubriqueId, statut } = options
+  return {
+    ...(q ? { titre: { contains: q } } : {}),
+    ...(rubriqueId ? { rubriqueId } : {}),
+    ...(statut ? { statut } : {}),
+  }
+}
+
+/** La liste d'administration, la plus récemment MODIFIÉE d'abord (FR-005). */
+export async function listerArticlesAdmin(options: OptionsListeAdmin = {}) {
+  const { page = 1, taille = 20 } = options
+  return prisma.article.findMany({
+    where: critereAdmin(options),
+    // La couverture est jointe pour la vignette de table (data-model §4).
+    include: { couverture: true },
+    orderBy: { modifieLe: 'desc' },
+    skip: (page - 1) * taille,
+    take: taille,
+  })
+}
+
+/** Le total de la liste d'administration — MÊME critère (research.md D12). */
+export async function compterArticlesAdmin(options: OptionsListeAdmin = {}): Promise<number> {
+  return prisma.article.count({ where: critereAdmin(options) })
+}
+
+/**
+ * L'article COMPLET pour l'éditeur — corps compris, couverture jointe, brouillon
+ * compris. `null` si l'identifiant est inconnu. Contrat d'administration, gardé :
+ * il montre ce que les lectures publiques cachent.
+ */
+export async function articleAdminParId(id: string) {
+  return prisma.article.findUnique({
+    where: { id },
+    include: { couverture: true },
+  })
+}
+
+// ---------------------------------------------------------------------------
 // Transitions de publication
 // ---------------------------------------------------------------------------
+
+/**
+ * La porte de PUBLICATION sur le CONTENU (FR-014/US3) : titre, chapô et corps
+ * non vides. La couverture et son `alt` restent contrôlés par `publierArticle`
+ * (002). Cette porte nomme le premier champ TEXTUEL manquant — un brouillon peut
+ * être incomplet ; c'est la publication qui exige la complétude.
+ *
+ * Un corps « vide » est un corps sans texte ET sans média : `<img>` seul est un
+ * contenu (une planche photo est publiable).
+ */
+export function verifierCompletudePublication(article: {
+  titre: string
+  chapo: string
+  corps: string
+}): void {
+  if (article.titre.trim() === '') {
+    throw new ErreurValidation('Un article ne peut pas être publié sans titre.')
+  }
+  if (article.chapo.trim() === '') {
+    throw new ErreurValidation('Un article ne peut pas être publié sans chapô.')
+  }
+  const texte = article.corps.replace(/<[^>]*>/g, '').trim()
+  const aMedia = /<(img|figure)\b/i.test(article.corps)
+  if (texte === '' && !aMedia) {
+    throw new ErreurValidation('Un article ne peut pas être publié avec un corps vide.')
+  }
+}
 
 /**
  * Publie un article.

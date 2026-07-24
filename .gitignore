@@ -19,6 +19,10 @@ prisma/generated/
 prisma/*.db
 prisma/*.db-journal
 
+# Médias sur disque — contenu généré (seed) ou téléversé, jamais versionné
+# (même statut que la base locale). Le stockage est réhydraté par le seed.
+stockage/
+
 # Playwright
 test-results/
 playwright-report/

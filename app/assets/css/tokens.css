@@ -189,4 +189,9 @@ html.dark,
   /* La bascule de thème est instantanée : aucune transition. */
   --transition-theme: 0ms;
   --transition-survol: 150ms;
+
+  /* Voile des dialogues modaux (`DialogueConfirmation`, écran non maquetté, D15).
+     CONSTANT — indépendant du thème : un voile assombrit toujours, quel que soit
+     le thème. Seul `tokens.css` porte une valeur littérale (principe II). */
+  --scrim: rgba(0, 0, 0, 0.45);
 }

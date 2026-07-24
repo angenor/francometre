@@ -41,3 +41,25 @@ export async function ouvrir(page: Page, chemin = '/styleguide') {
     () => new Promise((resoudre) => requestAnimationFrame(() => requestAnimationFrame(resoudre))),
   )
 }
+
+/**
+ * Identifiants d'amorçage de la rédaction (feature 004). Le mot de passe vient
+ * de l'environnement du seed ; sans lui, les tests d'administration ne peuvent
+ * pas se connecter (aucun mot de passe par défaut, par construction).
+ */
+export const IDENTIFIANT_ADMIN
+  = process.env.COMPTE_REDACTION_IDENTIFIANT ?? 'redaction@francometre.com'
+export const MOT_DE_PASSE_ADMIN = process.env.COMPTE_REDACTION_MOT_DE_PASSE ?? ''
+
+/**
+ * Se connecte à l'administration et attend l'atterrissage sur la liste des
+ * articles (`/admin` redirige vers `/admin/articles`). Partagé par les tests
+ * d'administration, qui commencent tous connectés.
+ */
+export async function seConnecterAdmin(page: Page) {
+  await ouvrir(page, '/connexion')
+  await page.getByLabel('E-mail').fill(IDENTIFIANT_ADMIN)
+  await page.getByLabel('Mot de passe').fill(MOT_DE_PASSE_ADMIN)
+  await page.getByRole('button', { name: 'Se connecter' }).click()
+  await page.waitForURL('**/admin/articles')
+}
