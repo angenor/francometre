@@ -23,9 +23,34 @@ if (error.value || !data.value) {
 }
 
 const {
-  conteneurUne, ordre, publiables, modifie,
+  conteneurUne, ordre, publiables, modifie, etatEnregistrement, messageErreur,
   epingler, retirer, monter, descendre, rechercher, enregistrer,
 } = useCompositionUne(data.value)
+
+/**
+ * Ce que l'écran DIT de la composition (porte 8). Le glisser-déposer ne touche
+ * que l'ordre LOCAL : sans ce repère, rien ne distinguait « déplacé mais pas
+ * encore envoyé » de « enregistré », et la Une paraissait ne pas persister.
+ *
+ * Même dessin que l'indicateur d'enregistrement de l'éditeur — pastille + texte,
+ * `--muted` au repos, `--erreur` en échec. Aucune couleur nouvelle, aucun accent
+ * ajouté : la constitution réserve l'accent aux emplois des maquettes.
+ */
+const indicateur = computed(() => {
+  if (etatEnregistrement.value === 'en-cours') {
+    return { texte: 'Enregistrement…', erreur: false, actif: true }
+  }
+  if (etatEnregistrement.value === 'echec') {
+    return { texte: messageErreur.value ?? 'L’enregistrement a échoué.', erreur: true, actif: false }
+  }
+  if (modifie.value) {
+    return { texte: 'Modifications non enregistrées', erreur: false, actif: false }
+  }
+  if (etatEnregistrement.value === 'enregistre') {
+    return { texte: 'La Une est enregistrée', erreur: false, actif: false }
+  }
+  return null
+})
 
 // Recherche débouncée dans les publiables.
 const recherche = ref('')
@@ -50,9 +75,12 @@ async function deplacer(index: number, sens: 'haut' | 'bas') {
   document.querySelector<HTMLElement>(`[data-poignee="${article.id}"]`)?.focus()
 }
 
+// Le RÉSULTAT de l'enregistrement est annoncé par l'indicateur (`role="status"`,
+// `role="alert"` en échec) : il portait auparavant « La Une est enregistrée »
+// même quand l'envoi avait échoué. La région `sr-only` ci-dessous reste dédiée
+// aux déplacements clavier — une annonce par évènement, jamais deux.
 async function enregistrerUne() {
   await enregistrer()
-  annonce.value = 'La Une est enregistrée.'
 }
 
 const rangsLibres = computed(() => {
@@ -73,9 +101,33 @@ const rangsLibres = computed(() => {
           L'ordre choisi ici est l'ordre affiché sur la page d'accueil.
         </p>
       </div>
-      <AppButton variante="primaire" class="shrink-0" @click="enregistrerUne">
-        Enregistrer la Une
-      </AppButton>
+      <div class="flex shrink-0 items-center gap-4">
+        <!-- Le libellé du bouton ne change JAMAIS (un nom accessible stable) :
+             l'état se lit ici, à côté. -->
+        <ClientOnly>
+          <p
+            v-if="indicateur"
+            data-testid="indicateur-une"
+            class="flex items-center gap-2 text-meta"
+            :class="indicateur.erreur ? 'text-erreur' : 'text-muted'"
+            :role="indicateur.erreur ? 'alert' : 'status'"
+          >
+            <span
+              class="size-1.5 shrink-0"
+              :class="[indicateur.erreur ? 'bg-erreur' : 'bg-muted', indicateur.actif && 'animate-pulse']"
+              aria-hidden="true"
+            />
+            {{ indicateur.texte }}
+          </p>
+        </ClientOnly>
+        <AppButton
+          variante="primaire"
+          :indisponible="etatEnregistrement === 'en-cours'"
+          @click="enregistrerUne"
+        >
+          Enregistrer la Une
+        </AppButton>
+      </div>
     </div>
 
     <div class="mt-9 grid gap-10 socle:grid-cols-[1.5fr_1fr]">

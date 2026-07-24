@@ -19,6 +19,7 @@ const {
   sousTheme, rubriqueId, couverture, couvertureAlt,
   datePublication, aLaUne, rangUne, statut,
   etatEnregistrement, dernierEnregistrement, messagePublication,
+  messageSucces, etatPublication,
   enregistrerBrouillon, publier, depublier,
 } = edition
 
@@ -119,6 +120,8 @@ const indicateur = computed(() => {
       v-model:couverture="couverture"
       v-model:couverture-alt="couvertureAlt"
       :message-publication="messagePublication"
+      :message-succes="messageSucces"
+      :etat-publication="etatPublication"
       @enregistrer-brouillon="enregistrerBrouillon"
       @publier="publier"
       @depublier="depublier"

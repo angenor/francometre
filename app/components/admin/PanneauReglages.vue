@@ -22,7 +22,13 @@ const couverture = defineModel<{ id: string, url: string } | null>('couverture',
 })
 const couvertureAlt = defineModel<string>('couvertureAlt', { required: true })
 
-defineProps<{ messagePublication: string | null }>()
+defineProps<{
+  messagePublication: string | null
+  /** Confirmation d'une publication/dépublication réussie (porte 8). */
+  messageSucces?: string | null
+  /** `en-cours` suspend les deux actions le temps de l'aller-retour serveur. */
+  etatPublication?: 'inactif' | 'en-cours'
+}>()
 
 const emit = defineEmits<{
   enregistrerBrouillon: []
@@ -152,12 +158,37 @@ function choisirRang(rang: number) {
       <p v-if="messagePublication" role="alert" class="mb-4 text-meta text-erreur">
         {{ messagePublication }}
       </p>
+      <!-- La réussite se dit aussi. `role="status"` et non `alert` : une
+           confirmation n'interrompt pas la lecture en cours, et l'écran ne
+           porte alors jamais deux `alert` concurrentes. -->
+      <p
+        v-else-if="messageSucces"
+        data-testid="succes-publication"
+        role="status"
+        class="mb-4 flex items-start gap-2 text-meta text-muted"
+      >
+        <svg
+          width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          class="mt-0.5 shrink-0" aria-hidden="true"
+        >
+          <path d="M4 12.5l5 5L20 6.5" />
+        </svg>
+        {{ messageSucces }}
+      </p>
 
       <div class="flex flex-col gap-3">
         <AppButton variante="secondaire" class="w-full" @click="emit('enregistrerBrouillon')">
           Enregistrer le brouillon
         </AppButton>
-        <AppButton variante="primaire" class="w-full" @click="emit('publier')">
+        <!-- Libellé INVARIABLE : un nom accessible qui change sous le doigt
+             désoriente ; l'état en vol se marque par l'indisponibilité. -->
+        <AppButton
+          variante="primaire"
+          class="w-full"
+          :indisponible="etatPublication === 'en-cours'"
+          @click="emit('publier')"
+        >
           Publier
         </AppButton>
       </div>

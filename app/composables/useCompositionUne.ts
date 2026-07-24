@@ -12,12 +12,40 @@ import type { ArticlePubliableDTO, CompositionUneDTO } from '#shared/types/dto'
 /** Un article de la Une : même forme épinglé (emplacement) ou publiable. */
 type ArticleUne = ArticlePubliableDTO
 
+/**
+ * L'état de l'enregistrement, pour que l'écran DISE ce qu'il fait (porte 8).
+ * Sans lui, un glisser-déposer restait local sans que rien ne le signale : la
+ * composition semblait « ne pas persister » alors qu'elle n'avait jamais été
+ * envoyée. `modifie` dit « il reste quelque chose à enregistrer », ceci dit
+ * « voilà où en est l'envoi ».
+ */
+type EtatEnregistrement = 'inactif' | 'en-cours' | 'enregistre' | 'echec'
+
+function messageServeur(erreur: unknown, defaut: string): string {
+  const data = (erreur as { data?: { statusMessage?: string, message?: string } })?.data
+  return data?.statusMessage || data?.message || defaut
+}
+function estExpiree(erreur: unknown): boolean {
+  return (erreur as { statusCode?: number })?.statusCode === 401
+}
+
 export function useCompositionUne(initial: CompositionUneDTO) {
   const epinglesInitiaux = initial.emplacements
     .filter((e) => e.article)
     .map((e) => e.article as ArticleUne)
 
   const modifie = ref(false)
+  const etatEnregistrement = ref<EtatEnregistrement>('inactif')
+  const messageErreur = ref<string | null>(null)
+
+  // Une nouvelle retouche efface la confirmation précédente : « enregistré »
+  // ne doit jamais rester affiché au-dessus d'un ordre qui a rebougé depuis.
+  watch(modifie, (aChange) => {
+    if (aChange && etatEnregistrement.value !== 'en-cours') {
+      etatEnregistrement.value = 'inactif'
+      messageErreur.value = null
+    }
+  })
 
   // La poignée `.js-poignee` seule initie le glisser ; un tri au pointeur marque
   // la composition comme modifiée.
@@ -76,15 +104,37 @@ export function useCompositionUne(initial: CompositionUneDTO) {
     publiables.value = dto.publiables.filter((a) => !epingles.has(a.id))
   }
 
-  /** Enregistre l'ordre — c'est cette action, et elle seule, qui fixe l'accueil. */
+  /**
+   * Enregistre l'ordre — c'est cette action, et elle seule, qui fixe l'accueil.
+   *
+   * L'échec ne se perd plus : il repassait en exception nue, avalée par le
+   * gestionnaire de clic, et l'écran restait muet pendant que la composition
+   * n'était pas partie. La composition locale est CONSERVÉE en cas d'échec :
+   * l'utilisateur retente sans avoir à refaire son classement.
+   */
   async function enregistrer() {
-    const dto = await $fetch<CompositionUneDTO>('/api/admin/une', {
-      method: 'PUT',
-      body: { ordre: ordre.value.map((a) => a.id) },
-    })
-    ordre.value = dto.emplacements.filter((e) => e.article).map((e) => e.article as ArticleUne)
-    publiables.value = [...dto.publiables]
-    modifie.value = false
+    etatEnregistrement.value = 'en-cours'
+    messageErreur.value = null
+    try {
+      const dto = await $fetch<CompositionUneDTO>('/api/admin/une', {
+        method: 'PUT',
+        body: { ordre: ordre.value.map((a) => a.id) },
+      })
+      ordre.value = dto.emplacements.filter((e) => e.article).map((e) => e.article as ArticleUne)
+      publiables.value = [...dto.publiables]
+      modifie.value = false
+      etatEnregistrement.value = 'enregistre'
+      return true
+    }
+    catch (erreur) {
+      if (estExpiree(erreur)) {
+        await navigateTo('/connexion?retour=' + encodeURIComponent('/admin/une'))
+        return false
+      }
+      etatEnregistrement.value = 'echec'
+      messageErreur.value = messageServeur(erreur, 'L’enregistrement de la Une a échoué.')
+      return false
+    }
   }
 
   /** Les cinq emplacements affichés : l'article à cette position, ou `null`. */
@@ -101,6 +151,8 @@ export function useCompositionUne(initial: CompositionUneDTO) {
     publiables,
     emplacements,
     modifie,
+    etatEnregistrement,
+    messageErreur,
     epingler,
     retirer,
     monter,

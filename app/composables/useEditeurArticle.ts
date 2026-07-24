@@ -55,6 +55,14 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
   const etatEnregistrement = ref<'enregistre' | 'en-cours' | 'echec'>('enregistre')
   const dernierEnregistrement = ref<string | null>(initial?.modifieLe ?? null)
   const messagePublication = ref<string | null>(null)
+  /**
+   * Le RÉUSSI de la publication, qui n'existait pas : seul l'échec parlait
+   * (`messagePublication`), si bien qu'une publication réussie ne changeait rien
+   * de visible et paraissait n'avoir rien fait (porte 8).
+   */
+  const messageSucces = ref<string | null>(null)
+  /** Publication/dépublication en vol — le bouton s'en sert pour se suspendre. */
+  const etatPublication = ref<'inactif' | 'en-cours'>('inactif')
 
   /**
    * Prêt à enregistrer : un titre suffit (un brouillon peut être incomplet ; la
@@ -145,7 +153,12 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
   // ils ne passent que par la publication.
   watch(
     [titre, chapo, corpsHtml, sousTheme, rubriqueId, couverture, couvertureAlt],
-    planifierAutosave,
+    () => {
+      // La confirmation porte sur ce qui a été publié : dès que le texte rebouge,
+      // elle ne décrit plus l'état courant et doit disparaître.
+      messageSucces.value = null
+      planifierAutosave()
+    },
   )
 
   onScopeDispose(() => clearTimeout(minuteur))
@@ -165,12 +178,14 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
    */
   async function publier() {
     messagePublication.value = null
-    await enregistrer()
-    if (id.value === null) {
-      messagePublication.value = 'Renseignez au moins un titre et un chapô avant de publier.'
-      return false
-    }
+    messageSucces.value = null
+    etatPublication.value = 'en-cours'
     try {
+      await enregistrer()
+      if (id.value === null) {
+        messagePublication.value = 'Renseignez au moins un titre et un chapô avant de publier.'
+        return false
+      }
       const dto = await $fetch<ArticleEditionDTO>(`/api/admin/articles/${id.value}/publier`, {
         method: 'POST',
         body: {
@@ -181,6 +196,12 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
         },
       })
       appliquer(dto)
+      // Une date future est acceptée (embargo, FR-014b) : le dire, sans quoi
+      // « publié » laisserait croire que l'article est déjà en ligne.
+      const differe = dto.publieLe ? new Date(dto.publieLe).getTime() > Date.now() : false
+      messageSucces.value = differe
+        ? 'Article programmé — il paraîtra à la date choisie.'
+        : 'Article publié — il est en ligne.'
       return true
     }
     catch (erreur) {
@@ -191,17 +212,23 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
       messagePublication.value = messageServeur(erreur, 'La publication a échoué.')
       return false
     }
+    finally {
+      etatPublication.value = 'inactif'
+    }
   }
 
   /** Repasse en brouillon (FR-017) : libère le rang de Une, conserve `publieLe`. */
   async function depublier() {
     if (id.value === null) return
     messagePublication.value = null
+    messageSucces.value = null
+    etatPublication.value = 'en-cours'
     try {
       const dto = await $fetch<ArticleEditionDTO>(`/api/admin/articles/${id.value}/depublier`, {
         method: 'POST',
       })
       appliquer(dto)
+      messageSucces.value = 'Article repassé en brouillon — il n’est plus en ligne.'
     }
     catch (erreur) {
       if (estExpiree(erreur)) {
@@ -209,6 +236,9 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
         return
       }
       messagePublication.value = messageServeur(erreur, 'La dépublication a échoué.')
+    }
+    finally {
+      etatPublication.value = 'inactif'
     }
   }
 
@@ -228,6 +258,8 @@ export function useEditeurArticle(initial?: ArticleEditionDTO) {
     etatEnregistrement,
     dernierEnregistrement,
     messagePublication,
+    messageSucces,
+    etatPublication,
     pretAEnregistrer,
     enregistrerBrouillon,
     publier,
