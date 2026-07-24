@@ -44,14 +44,53 @@ echo -e "${GREEN}=== Francomètre — Déploiement ===${NC}"
 echo -e "Serveur : ${BLUE}${REMOTE_USER}@${REMOTE_HOST}${NC}  —  Domaine : ${BLUE}${DOMAIN}${NC}"
 
 # --- Fonctions SSH (auth par clé) ------------------------------------------
+#
+# `ServerAliveInterval` n'est pas un confort : un build Nuxt reste plusieurs
+# minutes SANS écrire sur le canal, et une box qui coupe les connexions inactives
+# tue alors le SSH — donc le build, à mi-chemin. Le symptôme est trompeur :
+# « Broken pipe » puis un script qui semble se terminer normalement.
+SSH_OPTS=(-o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=20)
+
 ssh_cmd() {
-    ssh -o StrictHostKeyChecking=no "${REMOTE_USER}@${REMOTE_HOST}" "$@"
+    ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${REMOTE_HOST}" "$@"
 }
 scp_cmd() {
     scp -o StrictHostKeyChecking=no "$@"
 }
 ssh_heredoc() {
-    ssh -o StrictHostKeyChecking=no "${REMOTE_USER}@${REMOTE_HOST}"
+    ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${REMOTE_HOST}"
+}
+
+# Exécute une commande LONGUE sur le serveur en la DÉTACHANT (`setsid`) : elle
+# survit à la perte du SSH, au lieu de mourir d'un SIGHUP en plein build. On suit
+# ensuite son journal, et c'est la sentinelle finale — pas le code de retour du
+# `tail` — qui dit si l'opération a réussi.
+executer_detache() {
+    local commande="$1" journal="$2"
+    ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${REMOTE_HOST}" \
+        "rm -f ${journal} && setsid nohup bash -c '${commande} && echo __FM_OK__' > ${journal} 2>&1 < /dev/null & echo 'Tâche détachée lancée.'"
+
+    # Suivi : on affiche le journal au fil de l'eau jusqu'à la sentinelle.
+    local fini=""
+    for _ in $(seq 1 240); do
+        sleep 10
+        # « fini sans sentinelle » = échec. On ne le conclut qu'à DEUX conditions :
+        # plus aucun `docker compose` en vol, ET un journal muet depuis 60 s —
+        # sans quoi une phase silencieuse du build passerait pour un plantage.
+        fini=$(ssh "${SSH_OPTS[@]}" "${REMOTE_USER}@${REMOTE_HOST}" \
+            "if grep -q __FM_OK__ ${journal} 2>/dev/null; then echo ok;
+             elif pgrep -f 'docker compose' >/dev/null; then echo encours;
+             elif [ -n \"\$(find ${journal} -newermt '-60 seconds' 2>/dev/null)\" ]; then echo encours;
+             else echo fini; fi" 2>/dev/null)
+        case "$fini" in
+            ok) echo -e "${GREEN}Terminé.${NC}"; return 0 ;;
+            fini) echo -e "${RED}ÉCHEC — dernières lignes :${NC}"
+                  ssh_cmd "tail -25 ${journal}"; return 1 ;;
+            *) echo -n "." ;;
+        esac
+    done
+    echo -e "${YELLOW}Délai dépassé — suivre : ssh ${REMOTE_USER}@${REMOTE_HOST} 'tail -f ${journal}'${NC}"
+    return 1
 }
 
 # Crée le réseau partagé s'il manque et y attache le nginx d'africans.
@@ -163,15 +202,10 @@ ENDSSH
     assurer_reseau
 
     echo -e "${GREEN}[3/4] Build et démarrage du conteneur…${NC}"
-    ssh_heredoc <<ENDSSH
-        set -e
-        cd "${REMOTE_DIR}"
-        [ -f ".env" ] || { echo "ERREUR : .env introuvable. Lance d'abord : ./deploy.sh setup"; exit 1; }
-        ${COMPOSE} down || true
-        ${COMPOSE} build
-        ${COMPOSE} up -d
-        docker image prune -f
-ENDSSH
+    ssh_cmd "[ -f ${REMOTE_DIR}/.env ] || { echo 'ERREUR : .env introuvable. Lance d abord : ./deploy.sh setup'; exit 1; }"
+    executer_detache \
+        "cd ${REMOTE_DIR} && ${COMPOSE} build && ${COMPOSE} up -d && docker image prune -f" \
+        /tmp/fm-deploy.log || return 1
 
     echo -e "${GREEN}[4/4] Vérification…${NC}"
     ssh_heredoc <<ENDSSH
@@ -195,15 +229,10 @@ ENDSSH
 # ========================================
 update() {
     echo -e "${GREEN}Mise à jour rapide…${NC}"
-    ssh_heredoc <<ENDSSH
-        set -e
-        cd "${REMOTE_DIR}"
-        git fetch origin && git reset --hard origin/main
-        ${COMPOSE} build
-        ${COMPOSE} up -d
-        docker image prune -f
-        ${COMPOSE} ps
-ENDSSH
+    executer_detache \
+        "cd ${REMOTE_DIR} && git fetch origin && git reset --hard origin/main && ${COMPOSE} build && ${COMPOSE} up -d && docker image prune -f" \
+        /tmp/fm-update.log || return 1
+    ssh_cmd "cd ${REMOTE_DIR} && ${COMPOSE} ps"
     echo -e "${GREEN}Mise à jour terminée.${NC}"
 }
 
@@ -319,15 +348,10 @@ connect() {
 
 rebuild() {
     echo -e "${YELLOW}Rebuild complet sans cache…${NC}"
-    ssh_heredoc <<ENDSSH
-        set -e
-        cd "${REMOTE_DIR}"
-        ${COMPOSE} down
-        ${COMPOSE} build --no-cache
-        ${COMPOSE} up -d
-        docker image prune -f
-        ${COMPOSE} ps
-ENDSSH
+    executer_detache \
+        "cd ${REMOTE_DIR} && ${COMPOSE} down && ${COMPOSE} build --no-cache && ${COMPOSE} up -d && docker image prune -f" \
+        /tmp/fm-rebuild.log || return 1
+    ssh_cmd "cd ${REMOTE_DIR} && ${COMPOSE} ps"
     echo -e "${GREEN}Rebuild terminé.${NC}"
 }
 
