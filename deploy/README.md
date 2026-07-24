@@ -52,8 +52,8 @@ Depuis ce dossier (`deploy/`), sur ton poste (accès SSH par clé à `root@161.9
 
 ./deploy.sh deploy     # build de l'image + démarrage (migrations jouées au boot)
 
-./deploy.sh ssl        # certificat Let's Encrypt (apex + www)
-                       # ⚠ arrête le nginx d'africans quelques secondes
+./deploy.sh ssl        # certificat Let's Encrypt (apex + www), mode webroot
+                       # → aucune coupure : le nginx d'africans n'est PAS arrêté
 ```
 
 Puis **greffer le vhost sur le nginx d'africans** (une seule fois) :

@@ -221,36 +221,31 @@ seed() {
 # SSL — Certificat Let's Encrypt (apex + www)
 # ========================================
 ssl() {
-    echo -e "${GREEN}Certificat SSL pour ${DOMAIN} et www.${DOMAIN}…${NC}"
-    echo -e "${YELLOW}Note : le nginx d'africans est arrêté ~quelques secondes (port 80 libéré).${NC}"
+    echo -e "${GREEN}Certificat SSL (mode webroot, SANS arrêt de nginx) pour ${DOMAIN} + www…${NC}"
     ssh_heredoc <<ENDSSH
         set -e
         command -v certbot &> /dev/null || { apt-get update && apt-get install -y certbot; }
 
-        # Libère le port 80, tenu par le nginx d'africans.
-        docker stop ${AFRICANS_NGINX} || true
+        # Webroot ACME déjà servi par le nginx d'africans : dossier hôte
+        # ${AFRICANS_DIR}/nginx/certbot, monté sur /var/www/certbot dans le conteneur.
+        # PRÉREQUIS : le bloc server HTTP de ${DOMAIN} (avec la location
+        # « /.well-known/acme-challenge/ { root /var/www/certbot; } ») doit déjà être
+        # actif — c'est le cas dès que le vhost francometre.conf est greffé.
+        mkdir -p ${AFRICANS_DIR}/nginx/certbot ${AFRICANS_DIR}/nginx/ssl
 
-        certbot certonly --standalone \
+        certbot certonly --webroot -w ${AFRICANS_DIR}/nginx/certbot \
           -d ${DOMAIN} -d www.${DOMAIN} \
           --non-interactive --agree-tos --email admin@${DOMAIN} \
           --deploy-hook 'cp /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ${AFRICANS_DIR}/nginx/ssl/francometre-fullchain.pem && cp /etc/letsencrypt/live/${DOMAIN}/privkey.pem ${AFRICANS_DIR}/nginx/ssl/francometre-privkey.pem && (docker exec ${AFRICANS_NGINX} nginx -s reload || true)'
 
         # Copie INITIALE (le deploy-hook ne se déclenche qu'aux renouvellements).
-        mkdir -p ${AFRICANS_DIR}/nginx/ssl
         cp /etc/letsencrypt/live/${DOMAIN}/fullchain.pem ${AFRICANS_DIR}/nginx/ssl/francometre-fullchain.pem
         cp /etc/letsencrypt/live/${DOMAIN}/privkey.pem   ${AFRICANS_DIR}/nginx/ssl/francometre-privkey.pem
-
-        # Redémarre le nginx d'africans.
-        docker start ${AFRICANS_NGINX} || true
+        docker exec ${AFRICANS_NGINX} nginx -s reload || true
 ENDSSH
     echo ""
-    echo -e "${GREEN}Certificat installé.${NC} Chemins dans le nginx d'africans :"
-    echo "  /etc/nginx/ssl/francometre-fullchain.pem"
-    echo "  /etc/nginx/ssl/francometre-privkey.pem"
-    echo -e "${YELLOW}Renouvellement :${NC} pris en charge par le cron 'certbot renew' déjà"
-    echo "  installé par africans ; le deploy-hook recopie les certificats et recharge nginx."
-    echo -e "${YELLOW}Reste à faire :${NC} greffer deploy/nginx/francometre.conf sur le nginx d'africans"
-    echo "  (dépôt africans), puis : docker exec ${AFRICANS_NGINX} nginx -s reload"
+    echo -e "${GREEN}Certificat installé${NC} (renouvellement auto par le cron certbot, sans coupure)."
+    echo "  /etc/nginx/ssl/francometre-fullchain.pem  ·  /etc/nginx/ssl/francometre-privkey.pem"
 }
 
 # ========================================

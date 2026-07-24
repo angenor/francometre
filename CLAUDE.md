@@ -63,7 +63,7 @@ Piloté depuis `deploy/deploy.sh` (SSH par clé, `root@161.97.92.63`) :
 cd deploy
 ./deploy.sh setup     # clone, réseau partagé, .env + secrets (note le mdp rédaction)
 ./deploy.sh deploy    # build image + up (migrations jouées au boot)
-./deploy.sh ssl       # certificat Let's Encrypt (apex + www) — arrête brièvement le nginx d'africans
+./deploy.sh ssl       # certificat Let's Encrypt (apex + www), webroot — SANS coupure du nginx d'africans
 ./deploy.sh seed      # 8 rubriques + compte + exemples — UNE fois
 ./deploy.sh update|logs|status|backup|restart|stop|rebuild|connect
 ```
