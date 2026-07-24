@@ -53,6 +53,10 @@ const indicateur = computed(() => {
   <div class="flex min-w-0 flex-col socle:flex-row socle:items-stretch">
     <!-- Colonne d'édition -->
     <section class="min-w-0 flex-1 px-(--gouttiere-mobile) py-8 socle:px-14 socle:pt-8 socle:pb-16">
+      <!-- Titre de page unique (SC-010) : la « une » de l'écran est un champ de
+           saisie, pas un titre — d'où ce `h1` accessible, non peint. -->
+      <h1 class="sr-only">Rédaction de l'article</h1>
+
       <div class="flex items-center justify-between gap-6">
         <NuxtLink
           to="/admin/articles"

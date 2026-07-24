@@ -88,10 +88,26 @@ export interface AccueilDTO {
   sections: SectionAccueilDTO[]
 }
 
-/** La réponse de la page article : l'article et ses « à lire aussi ». */
+/**
+ * Métadonnées de référencement d'un article, DÉRIVÉES à la lecture (data-model
+ * §2, D8). Produites AU SERVEUR par `metaSeoArticleDe` ; consommées par la page
+ * article pour Open Graph/Twitter et le constructeur JSON-LD. Rien n'est
+ * persisté : ni l'URL absolue, ni les ISO ne vivent en base (porte 9).
+ */
+export interface SeoArticleDTO {
+  canonical: string           // {origine}/article/{slug} — absolu
+  imageAbsolue: string | null // couverture absolue (Stockage.urlAbsolue) ou null → défaut
+  publieISO: string           // date de parution, ISO 8601 (article:published_time)
+  modifieISO: string          // dernière modification, ISO 8601 (article:modified_time)
+  section: string             // libellé de la rubrique (article:section)
+  auteur: string | null       // nom de l'auteur, ou null → repli Organisation
+}
+
+/** La réponse de la page article : l'article, ses « à lire aussi » et son SEO. */
 export interface ArticlePageDTO {
   article: ArticleDTO
   aLireAussi: CarteDTO[]
+  seo: SeoArticleDTO
 }
 
 // ---------------------------------------------------------------------------

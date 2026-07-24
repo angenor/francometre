@@ -33,13 +33,16 @@ for (const theme of ['light', 'dark'] as const) {
 test('503 : le gabarit d\'indisponibilité répond et se réessaie', async ({ page }) => {
   await ouvrir(page, '/')
 
-  // Le service devient indisponible : la navigation cliente vers /articles reçoit
-  // un 503, que la page relaie au gabarit d'état.
-  await page.route('**/api/articles**', (route) =>
+  // Le service devient indisponible : la navigation cliente vers un ARTICLE reçoit
+  // un 503, que la page relaie au gabarit d'état. On vise un article, non la liste
+  // `/articles` : cette dernière est en cache `swr` (006) et sert alors du contenu
+  // PÉRIMÉ plutôt qu'une erreur — c'est précisément le rôle de `swr`. La page
+  // article, elle, n'est pas cachée et fait surgir la 503.
+  await page.route('**/api/articles/**', (route) =>
     route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }),
   )
 
-  await page.locator('a[href="/articles"]').first().click()
+  await page.locator('a[href^="/article/"]').first().click()
 
   await expect(page.getByText('503', { exact: true })).toBeVisible()
   await expect(page.getByText(/temporairement indisponible/)).toBeVisible()

@@ -33,10 +33,26 @@ if (liste.value?.rubrique) {
   route.meta.rubrique = liste.value.rubrique.id as RubriqueId
 }
 
-useHead(() => ({
-  title: liste.value?.rubrique
+const siteUrl = useRuntimeConfig().public.siteUrl
+
+// Canonique = la rubrique, la page de pagination CONSERVÉE (?page=N si N>1,
+// pagination indexable et auto-canonique, D5).
+const cheminCanonique = computed(() => {
+  const n = Number(route.query.page)
+  const suffixe = n > 1 ? `?page=${n}` : ''
+  return `/rubrique/${route.params.id}${suffixe}`
+})
+
+useSeoMeta({
+  title: () => liste.value?.rubrique
     ? `${liste.value.rubrique.libelle} — Francomètre`
     : 'Francomètre',
+  description: () => liste.value?.rubrique
+    ? `Toute l'actualité « ${liste.value.rubrique.libelle} » sur Francomètre, du plus récent au plus ancien.`
+    : undefined,
+})
+useHead(() => ({
+  link: [{ rel: 'canonical', href: urlCanonique(siteUrl, cheminCanonique.value) }],
 }))
 </script>
 

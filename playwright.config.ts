@@ -77,6 +77,11 @@ export default defineConfig({
         // seuil de limitation de débit et feraient échouer une connexion
         // légitime. On relève donc le seuil pour le serveur de test — la
         // limitation reste éprouvée à l'unité (`tests/unit/limiteDebit.test.ts`).
-        env: { ...process.env, LIMITE_DEBIT_SEUIL: '1000' },
+        // Seuil TRÈS relevé : les cinq largeurs en parallèle, plus les
+        // reconnexions de chaque test d'administration et les réessais, cumulent
+        // largement au-delà de 1000 connexions depuis 127.0.0.1. Le serveur ne
+        // doit pas se limiter LUI-MÊME (la limitation reste éprouvée à l'unité
+        // dans `tests/unit/limiteDebit.test.ts`).
+        env: { ...process.env, LIMITE_DEBIT_SEUIL: '100000' },
       },
 })

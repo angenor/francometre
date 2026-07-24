@@ -24,7 +24,21 @@ if (error.value) {
   })
 }
 
-useHead({ title: 'Francomètre — Tous les articles' })
+const siteUrl = useRuntimeConfig().public.siteUrl
+
+// Canonique de « tous les articles », pagination conservée (?page=N si N>1, D5).
+const cheminCanonique = computed(() => {
+  const n = Number(route.query.page)
+  return n > 1 ? `/articles?page=${n}` : '/articles'
+})
+
+useSeoMeta({
+  title: 'Tous les articles — Francomètre',
+  description: 'Tous les articles de Francomètre, toutes rubriques confondues, du plus récent au plus ancien.',
+})
+useHead(() => ({
+  link: [{ rel: 'canonical', href: urlCanonique(siteUrl, cheminCanonique.value) }],
+}))
 </script>
 
 <template>

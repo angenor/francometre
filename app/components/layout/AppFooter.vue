@@ -31,8 +31,17 @@ const informations = [
   'Contact',
 ] as const
 
-/** Liens à suivre — mêmes réserves sur les destinations. */
-const reseaux = ['X', 'Instagram', 'LinkedIn', 'YouTube', 'Flux RSS'] as const
+/**
+ * Liens à suivre — mêmes réserves sur les destinations, à une exception : le
+ * « Flux RSS » pointe vers la route `/rss.xml` réellement servie (FR-005).
+ */
+const reseaux = [
+  { libelle: 'X', href: '#' },
+  { libelle: 'Instagram', href: '#' },
+  { libelle: 'LinkedIn', href: '#' },
+  { libelle: 'YouTube', href: '#' },
+  { libelle: 'Flux RSS', href: '/rss.xml' },
+] as const
 </script>
 
 <template>
@@ -118,11 +127,11 @@ const reseaux = ['X', 'Instagram', 'LinkedIn', 'YouTube', 'Flux RSS'] as const
         <div class="flex flex-col gap-3">
           <a
             v-for="reseau in reseaux"
-            :key="reseau"
-            href="#"
+            :key="reseau.libelle"
+            :href="reseau.href"
             class="text-interface text-muted transition-colors duration-(--transition-survol) hover:text-ink"
           >
-            {{ reseau }}
+            {{ reseau.libelle }}
           </a>
         </div>
       </div>

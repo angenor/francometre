@@ -15,7 +15,13 @@
  * (principe VIII).
  */
 definePageMeta({ layout: 'nu' })
-useHead({ title: 'Connexion — Francomètre' })
+// Page non publique : titre propre, mais `noindex` — rien à indexer d'un accès
+// réservé (FR-006). `follow` laisse néanmoins suivre le lien vers l'accueil.
+useSeoMeta({
+  title: 'Connexion — Francomètre',
+  description: 'Accès réservé à la rédaction de Francomètre.',
+  robots: ROBOTS_NOINDEX,
+})
 
 const route = useRoute()
 const { loggedIn, fetch: rafraichirSession } = useUserSession()

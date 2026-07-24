@@ -10,7 +10,17 @@
  * DTO déjà mappé (research D2). Aucune rubrique déclarée : l'accueil n'en occupe
  * aucune, rien n'est signalé « page courante » dans la colonne (principe VIII).
  */
-useHead({ title: 'Francomètre — L\'actualité, mesurée.' })
+const siteUrl = useRuntimeConfig().public.siteUrl
+
+useHead({
+  title: 'Francomètre — L\'actualité, mesurée.',
+  // Canonique absolue de l'apex (D2). Une seule adresse fait foi pour la Une.
+  link: [{ rel: 'canonical', href: urlCanonique(siteUrl, '/') }],
+})
+useSeoMeta({
+  description: 'L\'actualité française, mesurée : une Une éditorialisée de cinq '
+    + 'articles et huit rubriques, mises à jour au fil des publications.',
+})
 
 const { data: accueil } = await useFetch('/api/accueil')
 
@@ -20,6 +30,14 @@ const POSITIONS = [72, 38, 60]
 
 <template>
   <div v-if="accueil">
+    <!--
+      Titre de page unique (SC-010). L'accueil éditorialisé n'affiche pas de
+      grand titre — les sections sont des `h2` —, mais une page doit porter un
+      `h1` : on le rend accessible aux technologies d'assistance sans le peindre
+      (accessibilité qui prime sur la maquette, principe VIII).
+    -->
+    <h1 class="sr-only">Francomètre — l'actualité, mesurée.</h1>
+
     <!-- À LA UNE -->
     <section class="py-14" data-testid="une">
       <p class="font-titre text-eyebrow leading-nul font-demi-grasse tracking-eyebrow uppercase text-accent">

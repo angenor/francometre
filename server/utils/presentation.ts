@@ -12,6 +12,7 @@ import type {
   EmplacementUneDTO,
   LigneArticleAdmin,
   ListePagineeDTO,
+  SeoArticleDTO,
   UneHeroDTO,
   UneSecondaireDTO,
 } from '../../shared/types/dto.ts'
@@ -172,6 +173,37 @@ export function articleDe(article: ArticleEntite): ArticleDTO {
       { libelle: 'Accueil', chemin: '/' },
       { libelle, chemin: cheminRubrique },
     ],
+  }
+}
+
+// ------------------------------------------------------- Métadonnées SEO (US3)
+
+/** L'article, plus sa date de MODIFICATION — le SEO l'expose (`dateModified`),
+ *  là où les mappeurs d'affichage n'en ont pas besoin. */
+export interface ArticleSeoEntite extends ArticleEntite {
+  modifieLe: Date
+}
+
+/**
+ * Les métadonnées de référencement d'un article (D8, data-model §2).
+ *
+ * L'URL absolue de l'image passe par `stockage.urlAbsolue` — JAMAIS une
+ * concaténation ailleurs (porte 9). `imageAbsolue` est `null` sans couverture :
+ * l'affichage retombe alors sur l'image de partage par défaut (D7). La `section`
+ * est le libellé français de la rubrique. Aucune URL n'est persistée : tout se
+ * calcule ici, à la lecture. La canonique est sans query (l'article n'a pas de
+ * pagination) et normalisée sans barre finale superflue.
+ */
+export function metaSeoArticleDe(article: ArticleSeoEntite, origine: string): SeoArticleDTO {
+  const id = article.rubriqueId as RubriqueId
+  const cle = article.couverture?.cle
+  return {
+    canonical: `${origine.replace(/\/+$/, '')}/article/${article.slug}`,
+    imageAbsolue: cle ? stockage.urlAbsolue(cle, origine) : null,
+    publieISO: dateISO(article.publieLe),
+    modifieISO: article.modifieLe.toISOString(),
+    section: libelleRubrique(id) ?? id,
+    auteur: article.auteur,
   }
 }
 

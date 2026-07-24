@@ -1,11 +1,30 @@
 import { createRequire } from 'node:module'
+import { fileURLToPath } from 'node:url'
 import tailwindcss from '@tailwindcss/vite'
+
+// Chemin ABSOLU du fournisseur d'images `medias` (résolu tel quel par
+// @nuxt/image, sans ambiguïté d'alias).
+const FOURNISSEUR_MEDIAS = fileURLToPath(new URL('./providers/medias.ts', import.meta.url))
 
 // `traceInclude` attend des CHEMINS DE FICHIERS, pas des noms de paquets : un
 // nom nu est résolu relativement à la racine du projet et provoque
 // « File …/better-sqlite3 does not exist » à la compilation. research.md D15
 // donne la recette sous forme de nom — elle est à traduire avant usage.
 const requis = createRequire(import.meta.url)
+
+// Origine absolue du site — une SEULE source, partagée par `runtimeConfig` (que
+// lisent les routes serveur `rss.xml`/`sitemap.xml`/`robots.txt`) et par les
+// défauts `app.head` (lien du flux RSS, FR-005). Surchargeable par
+// `NUXT_PUBLIC_SITE_URL` ; jamais dérivée de l'en-tête `Host`, qui n'est pas
+// fiable et casserait la reproductibilité des tests (research D2).
+const SITE_URL = process.env.NUXT_PUBLIC_SITE_URL ?? 'https://francometre.com'
+
+// Description de repli commune à toute page sans description propre (FR-002).
+// Chaque page la SURCHARGE via `useSeoMeta` ; celle-ci ne s'affiche que là où
+// rien n'a été posé.
+const DESCRIPTION_DEFAUT
+  = 'Francomètre — l\'actualité française, mesurée : huit rubriques, une Une '
+    + 'éditorialisée, des analyses sobres et vérifiées.'
 
 // Francomètre — configuration du socle.
 // Tailwind v4 est raccordé par son plugin Vite : ni `@nuxtjs/tailwindcss`,
@@ -33,9 +52,20 @@ export default defineNuxtConfig({
   // (bfcache) réafficherait une page d'administration après déconnexion, via le
   // bouton « précédent » (FR-013). `no-store` la force à être redemandée — le
   // middleware de refus par défaut s'exécute alors et renvoie à la connexion.
+  // Pages de LISTE : cache `swr` (stale-while-revalidate), servi instantanément
+  // et revalidé en arrière-plan, borné à 30 s (< 60 s pour SC-009). Contenu
+  // PUBLIC, aucune donnée par visiteur → cache partagé sûr ; la HTML est
+  // agnostique au thème (la classe `.dark` est posée côté client avant peinture,
+  // aucun flash — porte 5). L'administration, elle, ne se met JAMAIS en cache et
+  // n'est jamais indexée : `X-Robots-Tag: noindex` convient à une administration
+  // rendue côté client, sans toucher au refus par défaut (FR-006, porte 12).
   routeRules: {
-    '/admin': { headers: { 'cache-control': 'no-store' } },
-    '/admin/**': { headers: { 'cache-control': 'no-store' } },
+    '/': { swr: 30 },
+    '/articles': { swr: 30 },
+    '/articles/**': { swr: 30 },
+    '/rubrique/**': { swr: 30 },
+    '/admin': { headers: { 'cache-control': 'no-store', 'X-Robots-Tag': 'noindex' } },
+    '/admin/**': { headers: { 'cache-control': 'no-store', 'X-Robots-Tag': 'noindex' } },
   },
 
   // `AppShell`, `RubriqueIcon`… plutôt que `LayoutAppShell`, `UiRubriqueIcon` :
@@ -74,7 +104,7 @@ export default defineNuxtConfig({
     },
 
     public: {
-      siteUrl: 'https://francometre.com',
+      siteUrl: SITE_URL,
     },
   },
 
@@ -93,6 +123,12 @@ export default defineNuxtConfig({
   // `external`, `traceInclude`. Les `noExternals` et `traceDeps` que documente
   // nitro.build relèvent de Nitro v3 et n'existent pas ici.
   nitro: {
+    // Pré-compresse les assets statiques (JS, CSS, polices) au build : le serveur
+    // node les sert alors en gzip/brotli sans dépendre d'un proxy amont — le JS
+    // du socle (~231 Ko) tombe à ~70 Ko, ce qui débloque le FCP/LCP sur réseau
+    // lent (SC-001, profil mobile). Portable : aucune dépendance externe.
+    compressPublicAssets: { gzip: true, brotli: true },
+
     externals: {
       external: ['better-sqlite3', '@prisma/adapter-better-sqlite3', 'sharp'],
       traceInclude: [requis.resolve('better-sqlite3'), requis.resolve('sharp')],
@@ -115,6 +151,27 @@ export default defineNuxtConfig({
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        // Défauts de référencement (research D1). Chaque page les surcharge par
+        // `useSeoMeta` (`description`, `og:*` d'article) ; ceux-ci sont les
+        // valeurs de repli communes.
+        { name: 'description', content: DESCRIPTION_DEFAUT },
+        { property: 'og:site_name', content: 'Francomètre' },
+        { name: 'twitter:card', content: 'summary_large_image' },
+        // Aperçu de partage par défaut (FR-010). La page article SURCHARGE
+        // `og:image` (sa couverture) et `og:type` (`article`) — unhead déduplique
+        // par propriété, il ne reste alors qu'une seule balise de chaque.
+        { property: 'og:image', content: `${SITE_URL}/brand/partage-defaut.png` },
+        { property: 'og:type', content: 'website' },
+      ],
+      link: [
+        // Flux RSS déclaré dans l'en-tête de TOUTE page (FR-005). URL absolue
+        // bâtie sur `siteUrl`, jamais sur l'en-tête `Host`.
+        {
+          rel: 'alternate',
+          type: 'application/rss+xml',
+          title: 'Francomètre',
+          href: `${SITE_URL}/rss.xml`,
+        },
       ],
     },
   },
@@ -137,11 +194,21 @@ export default defineNuxtConfig({
     ],
   },
 
-  // Configuré ici, exploité par les features de contenu (research.md D11).
+  // Fournisseur d'images `medias` (research D10). Les couvertures ne sont PAS
+  // des fichiers de `public/` : elles sont servies par la route
+  // `server/routes/medias/[...cle]` — donc par l'interface `Stockage` (porte 9),
+  // qui produit AUSSI les variantes redimensionnées en ligne (`?w=&f=&q=`). Le
+  // fournisseur compose ces adresses ; aucun service tiers, aucune requête que le
+  // serveur s'adresserait à lui-même. Le jour du passage à S3, rien ne change :
+  // la route sert alors depuis S3. `screens` alimente le `srcset` de `<NuxtImg>`.
   image: {
     quality: 80,
     format: ['webp'],
     screens: { xs: 375, sm: 640, md: 768, socle: 1000, lg: 1024, xl: 1280, xxl: 1440 },
+    provider: 'medias',
+    providers: {
+      medias: { provider: FOURNISSEUR_MEDIAS },
+    },
   },
 
   // Les huit pictogrammes de rubrique sont les tracés des maquettes, servis

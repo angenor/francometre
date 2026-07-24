@@ -18,11 +18,16 @@ const dateFr = computed(() => dateLongueFr(props.hero.date))
 <template>
   <NuxtLink :to="hero.chemin" class="group block">
     <div class="relative aspect-video overflow-hidden bg-surface">
-      <img
+      <NuxtImg
         :src="hero.image"
         :alt="hero.imageAlt"
+        format="webp"
+        sizes="100vw socle:58vw"
+        preload
+        loading="eager"
+        fetchpriority="high"
         class="absolute inset-0 h-full w-full object-cover transition-transform duration-(--transition-survol) group-hover:transform-[scale(1.03)] group-focus-visible:transform-[scale(1.03)]"
-      >
+      />
     </div>
 
     <div class="pt-[22px]">

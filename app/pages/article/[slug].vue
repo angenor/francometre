@@ -26,8 +26,49 @@ if (data.value) {
   route.meta.rubrique = data.value.article.rubrique.id
 }
 
+const siteUrl = useRuntimeConfig().public.siteUrl
+
+/** URL absolue de l'image de partage par défaut (repli et logo JSON-LD, D7). */
+const imageDefaut = `${siteUrl}/brand/partage-defaut.png`
+
+/** L'image de partage : la couverture absolue, sinon le défaut (D7). */
+const imagePartage = computed(() => data.value?.seo.imageAbsolue ?? imageDefaut)
+
+// Titre nu marqué « Francomètre » et description = chapô (D1) ; Open Graph
+// « article » + Twitter Card depuis `data.seo` (D8). L'`og:image` et l'`og:type`
+// REMPLACENT les défauts de `nuxt.config` (unhead déduplique par propriété →
+// une seule balise `og:image`, `og:type=article` et non `website`).
+useSeoMeta({
+  title: () => data.value ? `${data.value.article.titre} — Francomètre` : 'Francomètre',
+  description: () => data.value?.article.chapo ?? undefined,
+  ogType: 'article',
+  ogTitle: () => data.value?.article.titre,
+  ogDescription: () => data.value?.article.chapo,
+  ogUrl: () => data.value?.seo.canonical,
+  ogImage: () => imagePartage.value,
+  twitterTitle: () => data.value?.article.titre,
+  twitterDescription: () => data.value?.article.chapo,
+  twitterImage: () => imagePartage.value,
+  articlePublishedTime: () => data.value?.seo.publieISO,
+  articleModifiedTime: () => data.value?.seo.modifieISO,
+  articleSection: () => data.value?.seo.section,
+  // `article:author` admet plusieurs auteurs → tableau. Omis quand l'auteur est
+  // nul (le repli Organisation est assuré côté JSON-LD).
+  articleAuthor: () => (data.value?.seo.auteur ? [data.value.seo.auteur] : undefined),
+})
+
+// Canonique absolue (D2) + données structurées `NewsArticle` (D8). Le `<` de la
+// charge JSON est échappé pour qu'un titre ne puisse jamais rompre le `<script>`.
 useHead(() => ({
-  title: data.value ? `${data.value.article.titre} — Francomètre` : 'Francomètre',
+  link: data.value ? [{ rel: 'canonical', href: data.value.seo.canonical }] : [],
+  script: data.value
+    ? [{
+        type: 'application/ld+json',
+        innerHTML: JSON.stringify(
+          jsonldArticle(data.value.seo, data.value.article, imageDefaut),
+        ).replace(/</g, '\\u003c'),
+      }]
+    : [],
 }))
 
 /** Métadonnées de la signature, dans l'ordre : date · temps de lecture · auteur. */
@@ -73,11 +114,16 @@ const meta = computed(() => {
       <!-- Couverture, largeur de contenu. -->
       <figure v-if="data.article.couverture" class="mt-10">
         <div class="relative aspect-video overflow-hidden bg-surface">
-          <img
+          <NuxtImg
             :src="data.article.couverture.url"
             :alt="data.article.couverture.alt"
+            format="webp"
+            sizes="100vw socle:720px"
+            preload
+            loading="eager"
+            fetchpriority="high"
             class="absolute inset-0 h-full w-full object-cover"
-          >
+          />
         </div>
         <figcaption
           v-if="data.article.couverture.legende"
