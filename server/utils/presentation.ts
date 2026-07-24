@@ -6,7 +6,11 @@ import { tempsLecture } from '../../shared/utils/tempsLecture.ts'
 import { libelleRubrique, type RubriqueId } from '../../shared/utils/rubriques.ts'
 import type {
   ArticleDTO,
+  ArticleEditionDTO,
+  ArticlePubliableDTO,
   CarteDTO,
+  EmplacementUneDTO,
+  LigneArticleAdmin,
   ListePagineeDTO,
   UneHeroDTO,
   UneSecondaireDTO,
@@ -169,6 +173,141 @@ export function articleDe(article: ArticleEntite): ArticleDTO {
       { libelle, chemin: cheminRubrique },
     ],
   }
+}
+
+// -------------------------------------------------------- Mappeurs d'ADMINISTRATION
+
+/** Le minimum qu'un mappeur d'administration lit d'un article de la liste. */
+export interface ArticleAdminEntite {
+  id: string
+  titre: string
+  statut: string
+  rangUne: number | null
+  publieLe: Date | null
+  modifieLe: Date
+  rubriqueId: string
+  couvertureAlt: string | null
+  couverture?: CouvertureJointe | null
+}
+
+/**
+ * Une ligne de la table « Articles » (dérivé 3).
+ *
+ * `image` est présente dès qu'une couverture existe — la vignette de table est
+ * PRÉSENTATIONNELLE (le titre porte le sens), elle peut donc figurer même sur un
+ * brouillon dont l'`alt` n'est pas encore posé. L'URL passe par `stockage.url` :
+ * la base ne range qu'une clé (porte 9). La date affichée est la parution si
+ * l'article est publié, sinon la dernière modification.
+ */
+export function ligneArticleAdminDe(article: ArticleAdminEntite): LigneArticleAdmin {
+  const id = article.rubriqueId as RubriqueId
+  const cle = article.couverture?.cle
+  const alt = article.couvertureAlt?.trim()
+
+  return {
+    id: article.id,
+    titre: article.titre,
+    rubrique: { id, libelle: libelleRubrique(id) ?? id },
+    statut: article.statut as 'brouillon' | 'publie',
+    rangUne: article.rangUne,
+    date: dateISO(article.publieLe ?? article.modifieLe),
+    ...(cle ? { image: stockage.url(cle) } : {}),
+    ...(cle && alt ? { imageAlt: alt } : {}),
+  }
+}
+
+/** Le minimum qu'un mappeur d'édition lit d'un article complet. */
+export interface ArticleEditionEntite {
+  id: string
+  titre: string
+  slug: string
+  chapo: string
+  corps: string
+  sousTheme: string | null
+  auteur: string | null
+  statut: string
+  publieLe: Date | null
+  rubriqueId: string
+  rangUne: number | null
+  couvertureAlt: string | null
+  couvertureLegende: string | null
+  modifieLe: Date
+  couverture?: { id: string, cle: string } | null
+}
+
+/**
+ * L'article complet chargé dans l'éditeur (`ArticleEditionDTO`). Le corps est
+ * `corpsHtml` — DÉJÀ assaini au stockage. La couverture porte son `url`
+ * (calculée par `stockage.url`, jamais persistée), son `alt` d'accessibilité et
+ * sa `legende` éditoriale, distincts. `modifieLe` alimente l'indicateur
+ * d'autosave.
+ */
+export function articleEditionDe(article: ArticleEditionEntite): ArticleEditionDTO {
+  return {
+    id: article.id,
+    titre: article.titre,
+    slug: article.slug,
+    chapo: article.chapo,
+    corpsHtml: article.corps,
+    sousTheme: article.sousTheme,
+    auteur: article.auteur,
+    statut: article.statut as 'brouillon' | 'publie',
+    publieLe: article.publieLe ? article.publieLe.toISOString() : null,
+    rubriqueId: article.rubriqueId as RubriqueId,
+    rangUne: article.rangUne,
+    couverture: article.couverture
+      ? {
+          id: article.couverture.id,
+          url: stockage.url(article.couverture.cle),
+          alt: article.couvertureAlt,
+          legende: article.couvertureLegende,
+        }
+      : null,
+    modifieLe: article.modifieLe.toISOString(),
+  }
+}
+
+// --------------------------------------------------- Composition de la Une (US4)
+
+/** Le minimum qu'un mappeur de « Composer la Une » lit d'un article. */
+export interface ArticleUneEntite {
+  id: string
+  titre: string
+  rubriqueId: string
+  couvertureAlt: string | null
+  couverture?: CouvertureJointe | null
+}
+
+/**
+ * La forme réduite d'un article dans « Composer la Une » — dérivés 1 et 2.
+ * L'eyebrow est le LIBELLÉ DE RUBRIQUE (contexte accueil) ; `image` reste une
+ * adresse d'application calculée par `stockage.url`.
+ */
+function miniArticleUne(article: ArticleUneEntite) {
+  const cle = article.couverture?.cle
+  const alt = article.couvertureAlt?.trim()
+  return {
+    id: article.id,
+    titre: article.titre,
+    rubrique: libelleRubrique(article.rubriqueId) ?? article.rubriqueId,
+    ...(cle ? { image: stockage.url(cle) } : {}),
+    ...(cle && alt ? { imageAlt: alt } : {}),
+  }
+}
+
+/** Les CINQ emplacements (rang 1..5), chacun portant son article ou `null`. */
+export function emplacementsUneDe(
+  epingles: (ArticleUneEntite & { rangUne: number | null })[],
+): EmplacementUneDTO[] {
+  return [1, 2, 3, 4, 5].map((rang) => {
+    const article = epingles.find((e) => e.rangUne === rang)
+    return { rang, article: article ? miniArticleUne(article) : null }
+  })
+}
+
+/** Un article publiable, proposé à l'épinglage (dérivé 2). */
+export function articlePubliableDe(article: ArticleUneEntite): ArticlePubliableDTO {
+  return miniArticleUne(article)
 }
 
 /** Une liste paginée (rubrique ou « tous les articles »). */

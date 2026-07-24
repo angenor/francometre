@@ -16,7 +16,7 @@ import { semerRubriques } from './harnais'
 // Deux échecs sont à éviter avec autant de soin : l'enregistrement
 // silencieusement corrigé, et l'erreur technique brute.
 
-/** Les dix fonctions d'écriture déclarées par contracts/services.md. */
+/** Les fonctions d'écriture des services (002 + back-office 005). */
 const ECRITURES = [
   'creerArticle',
   'modifierArticle',
@@ -28,6 +28,9 @@ const ECRITURES = [
   'enregistrerMedia',
   'supprimerMedia',
   'creerCompte',
+  // Ajouts du back-office (005) qui MUTENT la base.
+  'epinglerArticle',
+  'reordonnerUne',
 ] as const
 
 /** Une entrée invalide par fonction, et ce que le refus doit dire. */
@@ -100,6 +103,18 @@ const CAS: Array<{
     }),
     attendu: /au moins 3 caractères/,
   },
+  {
+    // Le rang est validé AVANT toute écriture : un rang 9 est refusé net.
+    nom: 'epinglerArticle',
+    appel: () => servicesUne.epinglerArticle('inexistant', 9),
+    attendu: /entre 1 et 5/,
+  },
+  {
+    // Un identifiant inconnu dans l'ordre : refus nommé, transaction annulée.
+    nom: 'reordonnerUne',
+    appel: () => servicesUne.reordonnerUne(['inexistant']),
+    attendu: /Aucun article/,
+  },
 ]
 
 /** Les mots qui trahissent une fuite de message technique jusqu'à l'appelant. */
@@ -118,6 +133,11 @@ describe('Toute écriture refuse une entrée invalide (SC-007)', () => {
       'mediaParId', 'compteParIdentifiant', 'verifierMotDePasse',
       // Helper pur, sans accès base : ni lecture ni écriture (FR-018).
       'normaliserIdentifiant',
+      // Lectures d'administration (005) — brouillons compris, sans mutation.
+      'listerArticlesAdmin', 'compterArticlesAdmin', 'articleAdminParId',
+      'articlesEpingles', 'articlesPubliables',
+      // Garde pure de publication : elle refuse mais n'écrit RIEN (pas une écriture).
+      'verifierCompletudePublication',
     ])
 
     const exportees = [

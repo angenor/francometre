@@ -1,4 +1,51 @@
 <!--
+RAPPORT DE SYNCHRONISATION — v1.3.0
+===================================
+Version : 1.2.0 → 1.3.0
+Date : 2026-07-24
+Nature du changement : MINOR — portée matériellement précisée. Le DERNIER arbitrage en
+attente est refermé par amendement, comme la Gouvernance l'exige. Aucun principe ajouté,
+retiré ni redéfini.
+
+Arbitrage refermé, tranché à la spécification du back-office
+(specs/005-back-office-redactionnel) et mis en œuvre par cette feature :
+
+  2. La Card dans le back-office ? → Le back-office N'EMPLOIE PAS la Card. Il emploie TROIS
+     dérivés en dimensions fixes, DÉCLARÉS comme composants d'administration
+     (`app/components/admin/`), hors du composant Card et sans le modifier :
+       · Emplacement de la Une (`EmplacementUne`) — vignette 213×120, héros 320×180 ;
+       · Ligne d'article publié (`LigneArticlePublie`) — vignette 64×36, titre 14 px,
+         eyebrow 10 px ;
+       · Vignette de table (`LigneTableArticle`) — vignette 64×36 en fond.
+     Raison : les maquettes de back-office sont dessinées en PIXELS FIXES (jamais en
+     `aspect-ratio` comme la Card), à des densités que la vignette de lecture ne sert
+     jamais. Étendre la Card de variantes « slot / pub / table » aurait introduit dans la
+     Card PUBLIQUE des divergences ne servant jamais le public — exactement ce que le
+     principe I proscrit. La Card publique reste UNIQUE et INCHANGÉE. Consigné aux
+     « Contraintes de conception ».
+
+Plus aucun arbitrage en attente : les quatre (1, 2, 3, 4) sont refermés.
+
+Portée volontairement limitée : les cotes exactes des trois dérivés vivent dans
+specs/005 (data-model §4) et CLAUDE.md — ce sont des dimensions de composants, pas des
+principes ; la constitution reste courte.
+
+Porte 2 (Card unique) : reformulée pour NOMMER l'exception déclarée du back-office. Le
+contrôle demeure — tout emploi PUBLIC passe par la Card ; les dérivés d'administration
+sont déclarés, un fichier chacun, jamais improvisés.
+
+Modèles synchronisés :
+  ✅ .specify/templates/plan-template.md — référence de version corrigée (v1.2.0 → v1.3.0) ;
+     les portes dérivent de principes que cet amendement ne touche pas.
+  ✅ .specify/templates/spec-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/tasks-template.md — relu, aucun changement requis.
+  ✅ .specify/templates/checklist-template.md — relu, aucun changement requis.
+
+Note de cohérence hors de ce fichier : CLAUDE.md décrit déjà les trois dérivés de manière
+identique ; aucune divergence à corriger.
+
+---
+
 RAPPORT DE SYNCHRONISATION — v1.2.0
 ===================================
 Version : 1.1.0 → 1.2.0
@@ -144,10 +191,14 @@ absolues et ne connaissent pas d'exception locale :
 
 - Rayon de bordure **0**, ombre **aucune**, dégradé **aucun** — nulle part, aucun écran,
   aucun état, aucun composant.
-- Un **seul** composant Card, réutilisé partout. Toute divergence visuelle entre deux
-  emplois de la Card est un défaut à corriger, pas une variante à tolérer. Les variantes
-  légitimes sont déclarées explicitement dans le composant (« grand », « sans image »,
-  « squelette »), jamais improvisées sur un écran.
+- Un **seul** composant Card côté **public**, réutilisé partout. Toute divergence visuelle
+  entre deux emplois de la Card est un défaut à corriger, pas une variante à tolérer. Les
+  variantes légitimes sont déclarées explicitement dans le composant (« grand », « sans
+  image », « squelette »), jamais improvisées sur un écran. **Le back-office fait exception,
+  déclarée** (amendement v1.3.0, arbitrage 2 refermé) : il n'emploie pas la Card mais
+  **trois dérivés en dimensions fixes** — emplacement de Une, ligne d'article publié,
+  vignette de table —, chacun son composant d'`app/components/admin/`, hors de la Card et
+  sans la modifier. La Card publique reste unique.
 - La navigation principale est une **colonne latérale gauche**, jamais une barre
   horizontale : 248 px côté public, 240 px côté back-office.
 - Les **huit rubriques** portent chacune un pictogramme au trait, monochrome, héritant de
@@ -331,18 +382,16 @@ clause de consultation du principe III si l'accent y paraît nécessaire.
 
 ### Arbitrages en attente
 
-Un point reste ouvert. Il ne bloque aucune feature, mais **doit être tranché par le porteur
-du projet** au moment indiqué, et non par défaut au fil du code.
+**Aucun.** Les quatre arbitrages ouverts par la Fondation ont tous été refermés par
+amendement, comme la Gouvernance l'exige (jamais par usage tacite) :
 
-*Les arbitrages 3 (frontière des filets) et 4 (mot-symbole) ont été refermés par
-l'amendement v1.1.0 ; les règles retenues sont consignées au principe I. L'arbitrage 1
-(eyebrow = rubrique ou sous-thème ?) a été refermé par l'amendement v1.2.0 ; la règle
-retenue est consignée ci-dessus, aux « Contraintes de conception ».*
-
-2. **La Card dans le back-office.** Le back-office n'emploie pas la Card mais trois dérivés
-   en pixels fixes et non documentés (`.slot`, `.pub`, `.thumb`), ce que le principe I
-   qualifie de divergence. → **À trancher à la spécification du back-office** : variantes
-   déclarées de la Card unique, ou correction des écrans.
+*L'arbitrage 1 (eyebrow = rubrique ou sous-thème ?) a été refermé par l'amendement v1.2.0 ;
+la règle retenue est consignée ci-dessus, aux « Contraintes de conception ». Les arbitrages
+3 (frontière des filets) et 4 (mot-symbole) l'ont été par l'amendement v1.1.0 ; leurs règles
+sont consignées au principe I. L'arbitrage 2 (la Card dans le back-office) a été refermé par
+l'amendement v1.3.0 : le back-office n'emploie pas la Card mais trois dérivés en dimensions
+fixes, déclarés comme composants d'administration ; la règle est consignée au principe I,
+« Sobriété structurelle ».*
 ## Portes de qualité
 
 Aucune feature n'est close tant que ces contrôles ne passent pas. Ils sont vérifiés sur les
@@ -351,7 +400,7 @@ Aucune feature n'est close tant que ces contrôles ne passent pas. Ils sont vér
 | # | Porte | Contrôle |
 |---|---|---|
 | 1 | Sobriété | Aucun `border-radius` non nul, aucune `box-shadow`, aucun `gradient` dans le diff |
-| 2 | Card unique | Tout emploi passe par le composant Card ; toute variante est déclarée dans le composant |
+| 2 | Card unique | Tout emploi **public** passe par le composant Card ; ses variantes sont déclarées dans le composant. Le back-office fait exception déclarée (v1.3.0) : trois dérivés en dimensions fixes, un composant chacun sous `app/components/admin/`, hors de la Card |
 | 3 | Coupe à 3,5° | Exactement deux porteurs de la diagonale : mot-symbole et filet de séparation |
 | 4 | Accent | Chaque occurrence est traçable à une maquette de `docs/design/html/` ; aucun accent en fond, hors l'entrée active de la nav back-office |
 | 5 | Thème | Les deux thèmes rendus ; ouverture sur le thème de l'OS ; choix persistant ; aucun flash au premier rendu |
@@ -393,4 +442,4 @@ phase 0 puis réévalué après la phase 1 de chaque plan. Les portes de qualit�
 avant clôture de chaque feature. Un écart non déclaré est un défaut, au même titre qu'une
 régression.
 
-**Version**: 1.2.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-19
+**Version**: 1.3.0 | **Ratified**: 2026-07-18 | **Last Amended**: 2026-07-24

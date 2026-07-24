@@ -13,10 +13,15 @@
 
 import 'dotenv/config'
 import argon2 from 'argon2'
+import sharp from 'sharp'
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3'
 import { PrismaClient } from './generated/client.ts'
 import { RUBRIQUES } from '../shared/utils/rubriques.ts'
 import { ROLE_PAR_DEFAUT } from '../shared/utils/roles.ts'
+// L'interface Stockage UNIQUE : le seed écrit les fichiers image PAR ELLE, jamais
+// par un accès disque direct (porte 9). C'est le seul module autorisé à toucher
+// `node:fs`, et le seed n'en importe donc aucun.
+import { stockage } from '../server/utils/stockage.ts'
 
 const adapter = new PrismaBetterSqlite3({
   url: process.env.DATABASE_URL!,
@@ -231,6 +236,52 @@ const SUPPLEMENTS = [
   { rubriqueId: 'culture', media: 'exemples/salle-de-concert.jpg', entrees: CULT_SUPPLEMENT },
 ] as const
 
+/**
+ * Écrit un FICHIER image d'exemple pour chaque clé de média, par l'interface
+ * `Stockage` (jamais d'accès disque direct — porte 9), afin que les couvertures
+ * semées s'affichent en back-office comme sur le site. Un aplat de couleur
+ * distinct par média suffit : ce n'est qu'un substitut d'illustration.
+ *
+ * Rejouable : `Stockage.put` écrase. La couleur est DÉRIVÉE de l'index (pas
+ * d'aléa), donc un rejeu produit le même fichier.
+ */
+async function semerLesFichiersMedias(): Promise<void> {
+  for (const [index, media] of MEDIAS.entries()) {
+    const teinte = Math.round((index / MEDIAS.length) * 360)
+    // Une couleur sobre (faible saturation, luminosité moyenne) par média.
+    const buffer = await sharp({
+      create: {
+        width: 1600,
+        height: 900,
+        channels: 3,
+        background: teinteVersRgb(teinte, 0.22, 0.62),
+      },
+    }).jpeg({ quality: 70 }).toBuffer()
+
+    await stockage.put(media.cle, buffer, 'image/jpeg')
+  }
+  console.log(`  ${MEDIAS.length} fichiers image d'exemple écrits (via Stockage).`)
+}
+
+/** HSL → RGB entier, pour des aplats déterministes et sobres. */
+function teinteVersRgb(h: number, s: number, l: number): { r: number, g: number, b: number } {
+  const c = (1 - Math.abs(2 * l - 1)) * s
+  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
+  const m = l - c / 2
+  const [r1, g1, b1]
+    = h < 60 ? [c, x, 0]
+      : h < 120 ? [x, c, 0]
+        : h < 180 ? [0, c, x]
+          : h < 240 ? [0, x, c]
+            : h < 300 ? [x, 0, c]
+              : [c, 0, x]
+  return {
+    r: Math.round((r1 + m) * 255),
+    g: Math.round((g1 + m) * 255),
+    b: Math.round((b1 + m) * 255),
+  }
+}
+
 async function semerLesMedias(): Promise<Map<string, string>> {
   const parCle = new Map<string, string>()
 
@@ -242,6 +293,8 @@ async function semerLesMedias(): Promise<Map<string, string>> {
     })
     parCle.set(media.cle, enregistre.id)
   }
+
+  await semerLesFichiersMedias()
 
   console.log(`  ${MEDIAS.length} médias d'exemple en place.`)
   return parCle
