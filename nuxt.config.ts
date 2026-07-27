@@ -213,9 +213,14 @@ export default defineNuxtConfig({
 
   // Les huit pictogrammes de rubrique sont les tracés des maquettes, servis
   // comme collection locale — pas remplacés par une bibliothèque générique.
+  //
+  // Les pictogrammes des liens « Suivre » sont dessinés au même trait (1,75,
+  // extrémités rondes, `currentColor`) et servis de la même façon : locale, donc
+  // aucune requête vers l'API Iconify au chargement d'une page.
   icon: {
     customCollections: [
       { prefix: 'rubrique', dir: './app/assets/icones/rubriques' },
+      { prefix: 'reseau', dir: './app/assets/icones/reseaux' },
     ],
   },
 
