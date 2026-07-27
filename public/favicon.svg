@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Francomètre">
+  <style>
+    .fond { fill: #FFFFFF }
+    .signe { fill: #0A0A0A }
+    @media (prefers-color-scheme: dark) {
+      .fond { fill: #0B0B0C }
+      .signe { fill: #F5F5F5 }
+    }
+  </style>
+  <rect class="fond" width="64" height="64"/>
+  <path class="signe" transform="translate(15.42 12) scale(0.08333)" d="M0 0 H398 V103 H118 V226 H369 V326 H118 V480 H0 Z"/>
+</svg>

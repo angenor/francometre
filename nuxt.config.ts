@@ -164,6 +164,15 @@ export default defineNuxtConfig({
         { property: 'og:type', content: 'website' },
       ],
       link: [
+        // Icône de navigateur — le « F » du mot-symbole, composé par
+        // `scripts/favicon.mjs`. Les deux premières lignes ne sont pas
+        // redondantes : le SVG passe en tête parce qu'il est net à toute taille
+        // ET qu'il suit le thème du système ; l'ICO reste pour ce qui ne lit
+        // pas le SVG, et c'est aussi lui que réclament les agents qui
+        // demandent `/favicon.ico` sans regarder l'en-tête.
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'icon', type: 'image/x-icon', sizes: '48x48', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
         // Flux RSS déclaré dans l'en-tête de TOUTE page (FR-005). URL absolue
         // bâtie sur `siteUrl`, jamais sur l'en-tête `Host`.
         {
