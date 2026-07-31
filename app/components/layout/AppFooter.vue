@@ -85,7 +85,7 @@ const reseaux = [
         >
       </NuxtLink>
       <p class="mt-1 text-saisie text-muted">
-        L’actualité, mesurée.
+        L’actualité est francophone.
       </p>
     </div>
 

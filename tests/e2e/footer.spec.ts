@@ -53,7 +53,7 @@ test('il présente la marque, sa signature et les deux groupes de liens', async 
   const pied = page.getByTestId('pied')
 
   await expect(pied.locator('[data-role="mot-symbole"]')).toBeVisible()
-  await expect(pied).toContainText('L’actualité, mesurée.')
+  await expect(pied).toContainText('L’actualité est francophone.')
   await expect(pied.getByRole('heading', { name: 'Informations' })).toBeVisible()
   await expect(pied.getByRole('heading', { name: 'Suivre' })).toBeVisible()
   await expect(pied).toContainText('Francomètre')

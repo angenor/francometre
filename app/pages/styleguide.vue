@@ -428,7 +428,7 @@ const enErreur = ref('')
           {{ t.role }}<br>{{ valeurs[t.token] }}<br>{{ t.detail }}
         </div>
         <div class="font-titre tracking-titre text-ink" :style="{ fontSize: `var(--${t.token})` }">
-          L’actualité, mesurée.
+          L’actualité est francophone.
         </div>
       </div>
     </section>
